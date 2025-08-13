@@ -2,13 +2,13 @@
 **Aveti libertatea de a aduga alte fisiere si a modifica acest schelet cum doriti. Important este sa implementati proiectul conform cerintelor primite.**
 **Acest text si tot textul ajutator de mai jos trebuiesc sterse inainte de a preda proiectul.**
 
-**Pentru a clona acest proiect creati propriul vostru proiect EMPTY in gihub si rulati:**
+**Pentru a clona acest proiect creati propriul vostru proiect EMPTY in gihub si rulati pas cu pas comenzile:**
 ```bash
 git clone git@github.com:amihai/platforma-monitorizare.git
 cd platforma-monitorizar
 git remote -v
 git remote remove origin
-git remote add origin:<USERUL_VOSTRU>/platforma-monitorizare.git
+git remote add origin git@github.com:<USERUL_VOSTRU>/platforma-monitorizare.git
 git branch -M main
 git push -u origin main
 ```
