@@ -14,6 +14,8 @@ git push -u origin main
 ```
 
 
+
+
 # Platforma de Monitorizare a Starii unui Sistem
 
 ## Scopul Proiectului
