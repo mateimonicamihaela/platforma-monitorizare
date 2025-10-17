@@ -1,25 +1,40 @@
-
-
-**Pentru a clona acest proiect creati propriul vostru proiect EMPTY in gihub si rulati pas cu pas comenzile:**
-```bash
-git clone git@github.com:amihai/platforma-monitorizare.git
-cd platforma-monitorizar
-git remote -v
-git remote remove origin
-git remote add origin git@github.com:<USERUL_VOSTRU>/platforma-monitorizare.git
-git branch -M main
-git push -u origin main
-```
-
-
-
-
 # Platforma de Monitorizare a Starii unui Sistem
 
 ## Scopul Proiectului
 - [Descriere detaliata a scopului proiectului. ]
 
 ### Arhitectura proiectului
+
+platforma-monitorizare/
+├─ README.md
+├─ scripts/
+│  ├─ backup.py
+|  ├─ monitoring.sh
+│  └─ system-state.log
+├─ docker/
+│  ├─ Dockerfile.state
+│  ├─ Dockerfile.backup
+│  └─ compose.yml
+├─ k8s/
+│  ├─ namespace.yaml
+│  ├─ deployment.yaml
+│  ├─ service.yaml
+│  └─ hpa.yaml
+├─ ansible/
+│  ├─ inventory.ini
+│  ├─ playbook-install-docker.yml
+│  └─ playbook-run-compose.yml
+├─ jenkins/
+│  └─ pipelines/
+│     ├─ Jenkinsfile-python
+│     └─ Jenkinsfile-bash
+└─ terraform/
+   ├─ providers.tf
+   ├─ variables.tf
+   ├─ main.tf
+   ├─ outputs.tf
+   └─ README-terraform.md
+
 Acest subpunct este BONUS.
 - [Desenati in excalidraw sau in orice tool doriti arhitectura generala a proiectului si includeti aici poza cu descrierea pasilor]
 
@@ -31,7 +46,10 @@ Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
 
 ## Structura Proiectului
 [Aici descriem rolul fiecarui director al proiectului. Descrierea trebuie sa fie foarte pe scurt la acest pas. O sa intrati in detalii la pasii urmatori.]
-- `/scripts`: [Puneti aici ce rol are directorul de scripturi si ce face fiecare script]
+- `/scripts`: 
+    - `monitoring.sh`: Un script shell care scrie intr-un fisier, la un interval de timp, informatii despre sistem (CPU, memorie, uptime, procese, disk).
+    - `backup.py`: Un script Python care face backup la fișierul de log, dacă acesta s-a modificat
+.
 - `/docker`: [Descriere Dockerfiles și docker-compose.yml. Aici descrieti legatura dintre fiecare Dockerfile si scripturile de mai sus (vedeti comentariul din fiecare Dockerfile)]
 - `/ansible`: [Descriere rolurilor playbook-urilor și inventory]
 - `/jenkins`: [Descrierea rolului acestui director si a subdirectoarelor. Unde sunt folosite fisierele din acest subdirector.]

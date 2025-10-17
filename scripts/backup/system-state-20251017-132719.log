@@ -1,0 +1,44 @@
+=== STAREA SISTEMULUI ===
+Timestamp: 2025-10-17 13:22:12
+Hostname : Ubuntu2204
+Kernel   : Linux 6.8.0-85-generic
+Uptime   : up 46 minutes
+LoadAvg  : 0.85 0.76 0.66
+
+--- CPU ---
+usr: all% sys: 0.00% idle: 0.00%
+CPU Usage     : 3.61%
+  User: 2.8%, System: 2.8%, Idle: 92.5%
+
+--- MEMORIE ---
+               total        used        free      shared  buff/cache   available
+Mem:           5.6Gi       2.7Gi       829Mi       107Mi       2.2Gi       2.6Gi
+Swap:          2.0Gi          0B       2.0Gi
+
+--- PROCESE ACTIVE ---
+    PID COMMAND         %CPU %MEM
+   5917 code            13.6  6.0
+   4895 gnome-shell     12.6  9.4
+   5889 code             3.9  2.8
+   3248 java             2.6 11.5
+   6224 code             2.5  7.9
+   5846 code             2.4  3.1
+   5940 code             1.9  3.7
+   5230 Xwayland         1.2  1.5
+   5931 code             1.0  1.8
+Total procese: 250
+
+--- DISK USAGE ---
+Filesystem       Type     Size  Used Avail Use% Mounted on
+/dev/sda3        ext4      24G   22G  817M  97% /
+/dev/sda2        vfat     512M  6.1M  506M   2% /boot/efi
+/dev/sdb         ext4      25G  4.3G   19G  19% /media/eu/More data
+/dev/sr0         iso9660   59M   59M     0 100% /media/eu/VBox_GAs_7.1.10
+
+--- REȚEA (interfețe up) ---
+lo: 127.0.0.1/8
+enp0s3: 10.0.2.15/24
+br-15d09dd5bd1c: 192.168.49.1/24
+br-b69ca6370886: 172.18.0.1/16
+docker0: 172.17.0.1/16
+
