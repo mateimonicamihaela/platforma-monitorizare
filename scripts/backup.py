@@ -147,5 +147,12 @@ if __name__ == "__main__":
         sys.exit(0)
 
 
+
+
+# In alt terminal:
+# BACKUP_INTERVAL=5
+# SRC_FILE=./system-state.log
+# BACKUP_DIR=./backup
+
 # Rulare
-# python3
+# python3 backup.py

@@ -47,8 +47,8 @@ Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
 ## Structura Proiectului
 [Aici descriem rolul fiecarui director al proiectului. Descrierea trebuie sa fie foarte pe scurt la acest pas. O sa intrati in detalii la pasii urmatori.]
 - `/scripts`: 
-    - `monitoring.sh`: Un script shell care scrie intr-un fisier, la un interval de timp, informatii despre sistem (CPU, memorie, uptime, procese, disk).
-    - `backup.py`: Un script Python care face backup la fișierul de log, dacă acesta s-a modificat
+    - `monitoring.sh`: Un script shell care scrie intr-un fisier, la un interval de timp, informatii despre sistem (CPU, memorie, uptime, procese active, utilizare disk, retea).
+    - `backup.py`: Un script Python care face backup la fișierul de log, dacă acesta s-a modificat.
 .
 - `/docker`: [Descriere Dockerfiles și docker-compose.yml. Aici descrieti legatura dintre fiecare Dockerfile si scripturile de mai sus (vedeti comentariul din fiecare Dockerfile)]
 - `/ansible`: [Descriere rolurilor playbook-urilor și inventory]
@@ -60,17 +60,24 @@ Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
 - [Cand includeti instructiuni folositi blocul de code markdown cu limbajul specific codului ]
 
 ```bash
-ls -al
-docker run my-app
+# Rulare
+chmod +x monitoring.sh  
+./monitoring.sh
+
+# Verificare rapida
+# Intr-un alt terminal:
+# watch -n 1 'head -n 30 "/media/eu/More data/platforma-monitorizare/scripts/system-state.log"'
+# „Afișează primele 30 de linii din fișierul system-state.log la fiecare 1 secundă, actualizând ecranul automat.”
 ```
 
 ```python
-import time
-print("Hello World")
-time.sleep(4)
+python3 backup.py
 ```
 
+## Setup și Rulare Docker
 - [Descrieti cum ati pornit containerele si cum ati verificat ca aplicatia ruleaza corect.] 
+- cd "/media/eu/More data/platforma-monitorizare/docker"
+- 
 - [Includeti aici pasii detaliati de configurat si rulat Ansible pe masina noua]
 - [Descrieti cum verificam ca totul a rulat cu succes? Cateva comenzi prin care verificam ca Ansible a instalat ce trebuia]
 

@@ -1,1 +1,32 @@
 # Configurație pentru rularea ambelor containere Docker.
+
+version: "3.9"
+
+services:
+  monitoring:
+    build:
+      context: ../
+      dockerfile: docker/monitoring/Dockerfile
+    container_name: monitoring-service
+    environment:
+      - INTERVAL=5
+      - OUT_FILE=/data/system-state.log   # suprascrie implicitul scriptului
+    volumes:
+      - ../data:/data
+    restart: unless-stopped
+
+  backup:
+    build:
+      context: ../
+      dockerfile: docker/backup/Dockerfile
+    container_name: backup-service
+    environment:
+      - BACKUP_INTERVAL=5
+      - SRC_FILE=/data/system-state.log   # suprascrie implicitul scriptului
+      - BACKUP_DIR=/data/backup           # suprascrie implicitul scriptului
+      - MAX_BACKUPS=10
+    depends_on:
+      - monitoring
+    volumes:
+      - ../data:/data
+    restart: unless-stopped
