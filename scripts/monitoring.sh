@@ -106,6 +106,7 @@ done
 # chmod +x monitoring.sh  
 # ./monitoring.sh
 
+
 # Verificare rapida
 # Intr-un alt terminal:
 # watch -n 1 'head -n 30 "/media/eu/More data/platforma-monitorizare/scripts/system-state.log"'

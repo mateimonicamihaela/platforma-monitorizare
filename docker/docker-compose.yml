@@ -8,6 +8,7 @@ services:
       context: ../
       dockerfile: docker/monitoring/Dockerfile
     container_name: monitoring-service
+    image: mateimonicamihaela/monitoring:latest
     environment:
       - INTERVAL=5
       - OUT_FILE=/data/system-state.log   # suprascrie implicitul scriptului
@@ -20,6 +21,7 @@ services:
       context: ../
       dockerfile: docker/backup/Dockerfile
     container_name: backup-service
+    image: mateimonicamihaela/backup:latest
     environment:
       - BACKUP_INTERVAL=5
       - SRC_FILE=/data/system-state.log   # suprascrie implicitul scriptului

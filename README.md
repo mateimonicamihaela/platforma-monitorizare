@@ -67,7 +67,8 @@ Vizualizam logurile aplicatiei:
 Oprim containerele:
 - docker compose down                              
 
-- După câteva secunde de rulare, verificăm fisierele locale:
+
+După câteva secunde de rulare, verificăm fisierele locale:
 ```bash
 ls -lh ../data/
 ls -lh ../data/backup/
@@ -91,6 +92,41 @@ Putem verifica direct continutul din containere:
 docker exec -it monitoring-service cat /data/system-state.log
 docker exec -it backup-service ls /data/backup
 ```
+☁️ (Opțional) Publicarea imaginilor în Docker Hub
+
+După ce verificam că totul funcționează, rulam:
+```bash
+docker images
+```
+
+Avem doua imagini locale:
+- docker-monitoring:latest → monitoring
+- docker-backup:latest → backup
+
+Le etichetam corect pentru Docker Hub și le dam push cu comenzile de mai jos:
+(1) Autentificare o singură dată (dacă nu ești logat)
+```bash
+docker login
+```
+
+(2) Monitoring → tag + push
+```bash
+docker tag docker-monitoring:latest mateimonicamihaela/monitoring:latest
+docker push mateimonicamihaela/monitoring:latest
+```
+
+(3) Backup → tag + push
+```bash
+docker tag docker-backup:latest mateimonicamihaela/backup:latest
+docker push mateimonicamihaela/backup:latest
+```
+
+
+
+
+
+
+
 
 - [Includeti aici pasii detaliati de configurat si rulat Ansible pe masina noua]
 - [Descrieti cum verificam ca totul a rulat cu succes? Cateva comenzi prin care verificam ca Ansible a instalat ce trebuia]
