@@ -46,13 +46,26 @@ python3 backup.py
 ```
 
 ## Setup și Rulare Docker
+
 - [Descrieti cum ati pornit containerele si cum ati verificat ca aplicatia ruleaza corect.] 
-- cd "/media/eu/More data/platforma-monitorizare/docker"  # Intram in folderul Docker
-- docker compose build                                    # Construim imaginile Docker
-- docker compose up -d                                    # Pornim serviciile in fundal  
-- docker ps                                               # Verificam daca ambele containere ruleaza
-- docker compose logs -f                                  # Vizualizam logurile aplicatiei
-- docker compose down                                     # Oprim containerele
+
+Intram in folderul Docker:
+- cd "/media/eu/More data/platforma-monitorizare/docker" 
+
+Construim imaginile Docker:
+- docker compose build 
+
+Pornim serviciile in fundal:
+- docker compose up -d  
+
+Verificam daca ambele containere ruleaza:
+- docker ps      
+
+Vizualizam logurile aplicatiei:
+- docker compose logs -f       
+
+Oprim containerele:
+- docker compose down                              
 
 - După câteva secunde de rulare, verificăm fisierele locale:
 ```bash
@@ -70,7 +83,10 @@ Containerele nu comunică prin rețea, ci prin volumul local montat:
 
 Astfel, backup-service vede fișierul actualizat de monitoring-service și creează copii noi doar dacă fișierul s-a modificat.
 
-🧰 Testare manuală-Putem verifica direct continutul din containere:
+🧰 Testare manuală
+
+Putem verifica direct continutul din containere:
+
 ```bash
 docker exec -it monitoring-service cat /data/system-state.log
 docker exec -it backup-service ls /data/backup
