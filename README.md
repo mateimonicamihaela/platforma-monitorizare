@@ -117,9 +117,13 @@ In această secțiune este documentat modul de împachetare și rulare a celor d
 Aplicația poate rula atât individual, cât și împreună, folosind servicii Docker conectate printr-un volum comun.
 
 3 secțiuni pentru Docker:
+
 1️⃣ Build manual al imaginilor Docker
+
 2️⃣ Rulare individuală cu docker run
+
 3️⃣ Rulare orchestrată cu docker compose
+
 
 🐳 Rulare cu Docker (fără Docker Compose)
 
@@ -138,6 +142,7 @@ docker build -t mateimonicamihaela/backup:latest \
 ✅ 2) Rularea containerelor individual
 
 ▶️ Container monitoring
+
 Scrie system-state.log în volumul mapat local:
 
 ```bash
