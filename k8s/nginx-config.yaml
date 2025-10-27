@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-logs-config
+  namespace: monitoring
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+      autoindex on;
+      autoindex_exact_size off;
+      autoindex_localtime on;
+
+      location /logs/ {
+        alias /usr/share/nginx/html/logs/;
+      }
+
+      location / {
+        return 302 /logs/system-state.log;
+      }
+    }

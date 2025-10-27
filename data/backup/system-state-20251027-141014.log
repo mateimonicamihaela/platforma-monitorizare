@@ -1,30 +1,30 @@
 === STAREA SISTEMULUI ===
-Timestamp: 2025-10-27 09:51:52
-Hostname : 8b2ef029aa9e
+Timestamp: 2025-10-27 14:10:13
+Hostname : ada454e6f7ec
 Kernel   : Linux 6.8.0-85-generic
-Uptime   : up 13 hours, 9 minutes
-LoadAvg  : 1.21 1.37 1.12
+Uptime   : up 17 hours, 27 minutes
+LoadAvg  : 4.26 3.19 3.03
 
 -----Utilizare CPU-----
-  User: 1.6%, System: 3.3%, Idle: 94.3%
+  User: 42.9%, System: 42.9%, Idle: 14.3%
 
 --------------------- MEMORIE ---------------------
                total        used        free      shared  buff/cache   available
-Mem:           5.6Gi       2.6Gi       261Mi        91Mi       2.7Gi       2.6Gi
-Swap:          2.0Gi       582Mi       1.4Gi
+Mem:           5.6Gi       3.1Gi       208Mi       129Mi       2.4Gi       2.2Gi
+Swap:          2.0Gi       1.4Gi       634Mi
 
 ------- PROCESE ACTIVE --------
     PID COMMAND         %CPU %MEM
-      1 monitoring.sh    0.2  0.0
-  11348 ps               0.0  0.0
-  11349 head             0.0  0.0
+      1 monitoring.sh    4.0  0.0
+     18 ps               0.0  0.0
+     19 head             0.0  0.0
 
 Total procese: 4
 
 --- DISK USAGE ---
 Filesystem     Type     Size  Used Avail Use% Mounted on
 /dev/sdb       ext4      25G  7.6G   16G  33% /data
-/dev/sda3      ext4      24G   23G   32M 100% /etc/hosts
+/dev/sda3      ext4      24G   23G  491M  98% /etc/hosts
 
 --- REȚEA (interfețe up) ---
 lo: 127.0.0.1/8
