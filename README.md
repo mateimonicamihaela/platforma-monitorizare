@@ -323,16 +323,19 @@ kubectl -n monitoring logs deploy/platforma-monitorizare -c backup --tail=30 -f
 
 🔗 Exemple de URL complet pentru accesarea aplicației:
 
-✅ Logul curent al sistemului:
+Logul curent al sistemului:
+
 http://192.168.49.2:30559/logs/system-state.log
 
-✅ Backup-urile efectuate
+Backup-urile efectuate
+
 http://192.168.49.2:30559/logs/backup/
 
 
 🧠 Cum se verifică in terminal:
 
 curl http://192.168.49.2:30559/logs/system-state.log
+
 curl http://192.168.49.2:30559/logs/backup/
 
 
