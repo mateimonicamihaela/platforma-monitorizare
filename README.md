@@ -5,6 +5,57 @@
 
 ### Arhitectura proiectului
 
+```.
+├── ansible
+│   ├── inventory.ini
+│   └── playbooks
+│       ├── deploy_platform.yml
+│       └── install_docker.yml
+├── backup
+├── data
+│   ├── backup
+│   │   ├── system-state-20251027-094326.log
+│   │   ├── system-state-20251027-094331.log
+│   │   ├── system-state-20251027-094337.log
+│   │   ├── system-state-20251027-094342.log
+│   │   ├── system-state-20251027-094347.log
+│   │   ├── system-state-20251027-094352.log
+│   │   ├── system-state-20251027-094357.log
+│   │   ├── system-state-20251027-094402.log
+│   │   ├── system-state-20251027-094407.log
+│   │   └── system-state-20251027-094412.log
+│   └── system-state.log
+├── docker
+│   ├── backup
+│   │   └── Dockerfile
+│   ├── docker-compose.yml
+│   └── monitoring
+│       └── Dockerfile
+├── imagini
+│   └── jenkins-logo.png
+├── jenkins
+│   └── pipelines
+│       ├── backup
+│       │   └── Jenkinsfile
+│       └── monitoring
+│           └── Jenkinsfile
+├── k8s
+│   ├── deployment.yaml
+│   └── hpa.yaml
+├── README.md
+├── scripts
+│   ├── backup
+│   │   ├── system-state-20251017-132719.log
+│   │   ├── system-state-20251017-134236.log
+│   │   ├── system-state-20251027-100317.log
+│   │   └── system-state-20251027-105655.log
+│   ├── backup.py
+│   ├── monitoring.sh
+│   └── system-state.log
+└── terraform
+    ├── backend.tf
+    └── main.tf
+```.
 
 Acest subpunct este BONUS.
 - [Desenati in excalidraw sau in orice tool doriti arhitectura generala a proiectului si includeti aici poza cu descrierea pasilor]
@@ -123,18 +174,18 @@ docker push mateimonicamihaela/backup:latest
 ```
 
 
-
-
-
-
-
-
-- [Includeti aici pasii detaliati de configurat si rulat Ansible pe masina noua]
-- [Descrieti cum verificam ca totul a rulat cu succes? Cateva comenzi prin care verificam ca Ansible a instalat ce trebuia]
-
 ## Setup și Rulare in Kubernetes
 - [Adaugati aici cateva detalii despre cum se poate rula in Kubernetes aplicatia]
 - [Bonus: Adaugati si o diagrama cu containerele si setupul de Kubernetes] 
+
+
+
+## Setup și Rulare in Ansible
+- [Includeti aici pasii detaliati de configurat si rulat Ansible pe masina noua]
+- [Descrieti cum verificam ca totul a rulat cu succes? Cateva comenzi prin care verificam ca Ansible a instalat ce trebuia]
+
+
+
 
 ## CI/CD și Automatizari
 - [Descriere pipeline-uri Jenkins. Puneti aici cat mai detaliat ce face fiecare pipeline de jenkins cu poze facute la pipeline in Blue Ocean. Detaliati cat puteti de mult procesul de CI/CD folosit.]
