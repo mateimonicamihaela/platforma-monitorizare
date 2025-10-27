@@ -1,9 +1,9 @@
 # Dockerfile pentru imaginea scriptului de monitorizare bash.
 
 
-# ============================
+# ================================
 # Dockerfile pentru monitoring.sh
-# ============================
+# ================================
 FROM ubuntu:22.04
 
 # Instalăm pachetele necesare pentru comenzi (top, free, ip, awk etc.)

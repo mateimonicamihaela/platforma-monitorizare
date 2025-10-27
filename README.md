@@ -5,35 +5,6 @@
 
 ### Arhitectura proiectului
 
-platforma-monitorizare/
-├─ README.md
-├─ scripts/
-│  ├─ backup.py
-|  ├─ monitoring.sh
-│  └─ system-state.log
-├─ docker/
-│  ├─ Dockerfile.state
-│  ├─ Dockerfile.backup
-│  └─ compose.yml
-├─ k8s/
-│  ├─ namespace.yaml
-│  ├─ deployment.yaml
-│  ├─ service.yaml
-│  └─ hpa.yaml
-├─ ansible/
-│  ├─ inventory.ini
-│  ├─ playbook-install-docker.yml
-│  └─ playbook-run-compose.yml
-├─ jenkins/
-│  └─ pipelines/
-│     ├─ Jenkinsfile-python
-│     └─ Jenkinsfile-bash
-└─ terraform/
-   ├─ providers.tf
-   ├─ variables.tf
-   ├─ main.tf
-   ├─ outputs.tf
-   └─ README-terraform.md
 
 Acest subpunct este BONUS.
 - [Desenati in excalidraw sau in orice tool doriti arhitectura generala a proiectului si includeti aici poza cu descrierea pasilor]
@@ -76,8 +47,35 @@ python3 backup.py
 
 ## Setup și Rulare Docker
 - [Descrieti cum ati pornit containerele si cum ati verificat ca aplicatia ruleaza corect.] 
-- cd "/media/eu/More data/platforma-monitorizare/docker"
-- 
+- cd "/media/eu/More data/platforma-monitorizare/docker"  --> Intram in folderul Docker
+- docker compose build                                    --> Construim imaginile Docker 
+- docker compose up -d                                    --> Pornim serviciile in fundal  
+- docker ps                                               --> Verificam daca ambele containere ruleaza
+- docker compose logs -f                                  --> Vizualizam logurile aplicatiei
+- docker compose down                                     --> Oprim containerele
+
+- După câteva secunde de rulare, verificăm fisierele locale:
+```bash
+ls -lh ../data/
+ls -lh ../data/backup/
+```
+🔗 Cum comunică între ele containerele
+Containerele nu comunică prin rețea, ci prin volumul local montat:
+
+| Container            | Scrie în                 | Citește din              | Director local            |
+| -------------------- | ------------------------ | ------------------------ | ------------------------- |
+| `monitoring-service` | `/data/system-state.log` | —                        | `./data/system-state.log` |
+| `backup-service`     | `/data/backup/`          | `/data/system-state.log` | `./data/backup/`          |
+
+Astfel, backup-service vede fișierul actualizat de monitoring-service și creează copii noi doar dacă fișierul s-a modificat.
+
+🧰 Testare manuală
+Putem verifica direct continutul din containere:
+```bash
+docker exec -it monitoring-service cat /data/system-state.log
+docker exec -it backup-service ls /data/backup
+```
+
 - [Includeti aici pasii detaliati de configurat si rulat Ansible pe masina noua]
 - [Descrieti cum verificam ca totul a rulat cu succes? Cateva comenzi prin care verificam ca Ansible a instalat ce trebuia]
 

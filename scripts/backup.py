@@ -1,4 +1,3 @@
-
 """
 Creați 2 scripturi:
 ○	Un script python ce face backup la fișierul system-state.log
@@ -31,7 +30,7 @@ MAX_BACKUPS = int(os.getenv("MAX_BACKUPS", "10"))           # Câte backup-uri m
 # Variabilă globală care permite oprirea elegantă
 _running = True
 
-# ========================== FUNCȚII AJUTATOARE =======================
+# ========================== FUNCTII AJUTATOARE =======================
 
 # Funcție simplă de log — afișează mesaje cu timestamp
 def log(level, msg):
