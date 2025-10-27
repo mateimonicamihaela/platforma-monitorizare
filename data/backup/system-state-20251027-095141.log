@@ -1,23 +1,23 @@
 === STAREA SISTEMULUI ===
-Timestamp: 2025-10-27 09:45:09
+Timestamp: 2025-10-27 09:51:36
 Hostname : 8b2ef029aa9e
 Kernel   : Linux 6.8.0-85-generic
-Uptime   : up 13 hours, 2 minutes
-LoadAvg  : 1.73 1.02 0.94
+Uptime   : up 13 hours, 9 minutes
+LoadAvg  : 1.27 1.39 1.13
 
 -----Utilizare CPU-----
-  User: 21.2%, System: 13.5%, Idle: 61.5%
+  User: 1.0%, System: 0.0%, Idle: 99.0%
 
 --------------------- MEMORIE ---------------------
                total        used        free      shared  buff/cache   available
-Mem:           5.6Gi       2.6Gi       263Mi        93Mi       2.7Gi       2.6Gi
+Mem:           5.6Gi       2.6Gi       254Mi        91Mi       2.7Gi       2.6Gi
 Swap:          2.0Gi       582Mi       1.4Gi
 
 ------- PROCESE ACTIVE --------
     PID COMMAND         %CPU %MEM
       1 monitoring.sh    0.2  0.0
-   9904 ps               0.0  0.0
-   9905 head             0.0  0.0
+  11291 ps               0.0  0.0
+  11292 head             0.0  0.0
 
 Total procese: 4
 

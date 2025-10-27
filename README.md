@@ -5,7 +5,7 @@
 
 ### Arhitectura proiectului
 
-```.
+```bash
 ├── ansible
 │   ├── inventory.ini
 │   └── playbooks
@@ -55,7 +55,7 @@
 └── terraform
     ├── backend.tf
     └── main.tf
-```.
+```
 
 Acest subpunct este BONUS.
 - [Desenati in excalidraw sau in orice tool doriti arhitectura generala a proiectului si includeti aici poza cu descrierea pasilor]
