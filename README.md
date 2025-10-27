@@ -104,6 +104,7 @@ Avem doua imagini locale:
 - docker-backup:latest → backup
 
 Le etichetam corect pentru Docker Hub și le dam push cu comenzile de mai jos:
+
 (1) Autentificare o singură dată (dacă nu ești logat)
 ```bash
 docker login
