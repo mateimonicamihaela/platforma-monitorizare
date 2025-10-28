@@ -316,12 +316,12 @@ minikube service -n monitoring platforma-monitorizare --url
 
 (8) Vezi logurile din containere
 
-MONITORIZARE:
+Monitorizare:
 ```bash
 kubectl -n monitoring logs deploy/platforma-monitorizare -c monitoring --tail=30 -f
 ```
 
-BACKUP:
+Backup:
 ```bash
 kubectl -n monitoring logs deploy/platforma-monitorizare -c backup --tail=30 -f
 ```
@@ -349,10 +349,162 @@ curl http://192.168.49.2:30559/logs/backup/
 - [Includeti aici pasii detaliati de configurat si rulat Ansible pe masina noua]
 - [Descrieti cum verificam ca totul a rulat cu succes? Cateva comenzi prin care verificam ca Ansible a instalat ce trebuia]
 
+(1) Bootstrap VM nou + user nou (o singură dată)
+
+ Pe masina remote (masina noua) adaugam un user nou si ii setam cheia de ssh 
+
+# Creează userul nou (ex: monitor) 
+```bash
+sudo adduser monitor
+```
+
+# Adaugam userul monitor in userii cu drept de sudo
+```bash
+sudo usermod -aG sudo monitor
+groups monitor
+```
+
+# Adaugam userul monitor in lista de useri ce nu au nevoie de parola la sudo
+```bash
+cd /etc/sudoers.d/
+echo "monitor ALL=(ALL) NOPASSWD:ALL" | sudo tee monitor-nopasswd
+```
+
+# (monitor este userul pe care il foloseste Ansible sa faca ssh pe masina server)
+```bash
+su - monitor
+```
+
+# Verificam ca putem face sudo fara parola
+```bash
+sudo ls
+```
+
+# Adaugam cheia de ssh a userului monitor in masina remote. Atentie: trebuie sa fiti logati cu userul monitor cand rulati aceste comenzi
+```bash
+mkdir .ssh
+touch ~/.ssh/authorized_keys
+echo “cheie ssh publica de pe masina client” >> ~/.ssh/authorized_keys
+cat ~/.ssh/authorized_keys
+```
+
+# Install ssh server pe masina remote
+```bash
+sudo apt update
+sudo apt install -y openssh-server
+service ssh status
+```
+
+# Luam IP-ul masinii remote (IP-ul care nu se termina in .1)
+```bash
+ip addr | grep 192.168
+```
+
+# Ne afiseaza 
+
+monitor@baseline:~$ ip addr | grep 192.168
+    inet 192.168.100.237/24 brd 192.168.100.255 scope global dynamic noprefixroute enp0s8
+    inet 192.168.49.1/24 brd 192.168.49.255 scope global br-4ef4fc0cb34f
+
+# Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
+```bash
+ssh monitor@192.168.100.237
+```
+
+(2) Ansible pe mașina locala + inventory
+
+# Install Ansible pe masina client (ubuntu2204).
+
+python3 -m pip install --user ansible
+ansible --version
+
+# Pe masina client (ubuntu2204) citim cheia publica a userului curent
+cat ~/.ssh/id_rsa.pub
+
+# Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
+```bash
+ssh monitor@192.168.100.237
+```
+# Asigură-te că există Python 3 pe VM (Ansible are nevoie)
+```bash
+sudo apt-get update
+sudo apt-get install -y python3
+```
+# Intoarce-te la userul eu
+```bash
+exit
+```
+
+ansible/ansible.cfg
+
+ansible/inventory.ini (actualizează IP-ul!)
+
+ansible/requirements.yml
+
+# Instalează colecția pe mașina de control:
+
+```bash
+cd ansible
+ansible-galaxy collection install -r requirements.yml
+```
+
+# Test ping simplu
+```bash
+ansible monitoring_vm -m ping
+```
+
+
+(3) Playbook 1 — Instalează Docker (Docker CE + compose plugin)
+
+ansible/playbooks/install_docker.yml
+
+Rulează:
+```bash
+cd ansible
+ansible-playbook playbooks/install_docker.yml
+```
+
+
+(4) Playbook 2 — Deploy cu docker compose + verificări log & backup
+
+Acest playbook:
+
+- clonează repo-ul meu pe VM în /opt/platforma-monitorizare
+
+- rulează docker compose up -d din docker/
+
+- așteaptă să apară system-state.log
+
+- verifică faptul că s-a creat cel puțin un fișier în data/backup/
+
+Important: în docker/docker-compose.yml trebuie sa avem image: mateimonicamihaela/monitoring:latest și image: mateimonicamihaela/backup:latest (fără build: pe server).
+
+ansible/playbooks/deploy_platform.yml
+
+```bash
+ansible-playbook playbooks/deploy_platform.yml
+```
+
+# Verificări manuale: 
+
+Pe masina remote cu userul nou
+
+```bash
+ssh monitor@192.168.100.237
+sudo docker ps
+sudo ls -lh /opt/platforma-monitorizare/data
+sudo ls -lh /opt/platforma-monitorizare/data/backup
+sudo tail -n 20 /opt/platforma-monitorizare/data/system-state.log
+```
+Pe masina locala
+
+```bash
+ansible monitoring_vm -m command -a "docker ps"
+```
 
 
 
-## CI/CD și Automatizari
+## Jenkins CI/CD și Automatizari
 - [Descriere pipeline-uri Jenkins. Puneti aici cat mai detaliat ce face fiecare pipeline de jenkins cu poze facute la pipeline in Blue Ocean. Detaliati cat puteti de mult procesul de CI/CD folosit.]
 - [Detalii cu restul cerintelor de CI/CD (cum ati creat userul nou ce are access doar la resursele proiectului, cum ati creat un View now pentru proiect, etc)]
 - [Daca ati implementat si punctul E optional atunci detaliati si setupul de minikube.]

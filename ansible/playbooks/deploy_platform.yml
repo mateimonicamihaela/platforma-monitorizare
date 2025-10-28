@@ -1,1 +1,153 @@
-# Playbook Ansible pentru rularea platformei Docker folosind docker-compose.
+---
+- name: "Desfășoară aplicația «platforma-monitorizare» folosind Docker Compose"
+  hosts: monitoring_vm
+  become: true
+  gather_facts: true
+
+  vars:
+    # Căi și setări implicite pe mașina țintă
+    app_dir: /opt/platforma-monitorizare
+    compose_dir: /opt/platforma-monitorizare/docker
+    data_dir: /opt/platforma-monitorizare/data
+    repo_url: "https://github.com/mateimonicamihaela/platforma-monitorizare.git"
+
+    # Variabile de mediu pentru containere (scrise în .env, apoi citite de docker compose)
+    INTERVAL: "5"
+    OUT_FILE: "/data/system-state.log"
+    BACKUP_INTERVAL: "5"
+    SRC_FILE: "/data/system-state.log"
+    BACKUP_DIR: "/data/backup"
+    MAX_BACKUPS: "10"
+
+  pre_tasks:
+    - name: "Instalează Git pentru clonarea repository-ului"
+      apt:
+        name: git
+        state: present
+        update_cache: true
+
+    - name: "Creează directoarele pentru aplicație și date"
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ app_dir }}"
+        - "{{ data_dir }}"
+        - "{{ data_dir }}/backup"
+
+  tasks:
+    - name: "Verifică dacă directorul de destinație este un repo Git"
+      stat:
+        path: "{{ app_dir }}/.git"
+      register: gitdir
+
+    - name: "Șterge directorul dacă nu este repo Git (pregătim clonarea curată)"
+      file:
+        path: "{{ app_dir }}"
+        state: absent
+      when: not gitdir.stat.exists
+
+    - name: "Recreează directorul aplicației (după ștergere, dacă a fost cazul)"
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: "Clonează sau actualizează repository-ul proiectului"
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main
+        update: yes        # face pull dacă există repo
+        force: yes         # aliniază forțat cu remote (origin/main)
+
+    - name: "Generează fișierul .env folosit de docker compose"
+      copy:
+        dest: "{{ compose_dir }}/.env"
+        mode: "0644"
+        content: |
+          # Variabile pentru platforma-monitorizare (generate de Ansible)
+          INTERVAL={{ INTERVAL }}
+          OUT_FILE={{ OUT_FILE }}
+          BACKUP_INTERVAL={{ BACKUP_INTERVAL }}
+          SRC_FILE={{ SRC_FILE }}
+          BACKUP_DIR={{ BACKUP_DIR }}
+          MAX_BACKUPS={{ MAX_BACKUPS }}
+
+        # --- Dependențe pentru modulul docker_compose pe VM ---
+
+    - name: "Colectează lista de pachete instalate"
+      package_facts:
+        manager: auto
+
+    - name: "Instalează dependențele Python pentru Docker (APT)"
+      apt:
+        name:
+          - python3-docker
+          - python3-pip
+        state: present
+        update_cache: true
+
+    - name: "Fallback: instalează Docker SDK via pip dacă lipsește"
+      ansible.builtin.pip:
+        name: docker
+        state: present
+        executable: pip3
+      when: ansible_facts.packages is not defined or
+            ('python3-docker' not in ansible_facts.packages)
+
+    - name: "Instalează docker-compose (biblioteca Python v1, necesară modulului)"
+      ansible.builtin.pip:
+        name: docker-compose
+        state: present
+        executable: pip3
+
+    - name: "Pornește aplicația cu Docker Compose (pull + up)"
+      community.docker.docker_compose:
+        project_src: "{{ compose_dir }}"
+        env_file: "{{ compose_dir }}/.env"
+        state: present
+        pull: yes
+        restarted: yes
+        remove_orphans: yes
+
+    # --- Verificări aplicație ---
+
+    - name: "Așteaptă ca fișierul de loguri să fie creat"
+      ansible.builtin.wait_for:
+        path: "{{ data_dir }}/system-state.log"
+        state: present
+        timeout: 60
+
+    - name: "Pauză scurtă pentru a permite rularea backup-ului"
+      pause:
+        seconds: 10
+
+    - name: "Caută fișiere de backup în directorul de date"
+      find:
+        paths: "{{ data_dir }}/backup"
+        patterns: "system-state-*.log"
+        file_type: file
+      register: found_backups
+
+    - name: "Afișează fișierele de backup găsite"
+      debug:
+        msg: "{{ found_backups.files | map(attribute='path') | list }}"
+
+    - name: "Eroare dacă nu s-a creat niciun fișier de backup"
+      fail:
+        msg: "Nu s-a creat niciun fișier de backup în {{ data_dir }}/backup! Verifică logurile containerului «backup»."
+      when: (found_backups.matched | default(0)) | int == 0
+
+    - name: "Afișează lista containerelor active (rezumat)"
+      shell: |
+        {% raw %}docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'{% endraw %}
+      args:
+         executable: /bin/bash
+      register: docker_ps
+      changed_when: false
+
+    - name: "Afișează rezultatul comenzii docker ps"
+      debug:
+        var: docker_ps.stdout_lines
