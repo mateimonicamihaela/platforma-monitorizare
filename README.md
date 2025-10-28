@@ -403,7 +403,6 @@ ip addr | grep 192.168
 Ne afiseaza 
 
 monitor@baseline:~$ ip addr | grep 192.168
-
     inet 192.168.100.237/24 brd 192.168.100.255 scope global dynamic noprefixroute enp0s8
 
     inet 192.168.49.1/24 brd 192.168.49.255 scope global br-4ef4fc0cb34f
@@ -417,12 +416,15 @@ ssh monitor@192.168.100.237
 (2) Ansible pe mașina locala + inventory
 
 Install Ansible pe masina client (ubuntu2204).
-
+```bash
 python3 -m pip install --user ansible
 ansible --version
+```
 
 Pe masina client (ubuntu2204) citim cheia publica a userului curent
+```bash
 cat ~/.ssh/id_rsa.pub
+```
 
 Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
 ```bash
@@ -480,7 +482,6 @@ Acest playbook:
 
 - verifică faptul că s-a creat cel puțin un fișier în data/backup/
 
-Important: în docker/docker-compose.yml trebuie sa avem image: mateimonicamihaela/monitoring:latest și image: mateimonicamihaela/backup:latest (fără build: pe server).
 
 ansible/playbooks/deploy_platform.yml
 

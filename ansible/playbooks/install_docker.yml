@@ -6,7 +6,7 @@
 
   vars:
     docker_users:
-      - monitor   # utilizatorul nou creat pe mașina țintă
+      - monitor   # utilizatorul nou creat pe mașina remote
 
   tasks:
     - name: Instalează pachetele de bază necesare pentru APT
