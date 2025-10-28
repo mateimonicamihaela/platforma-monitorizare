@@ -400,13 +400,12 @@ Luam IP-ul masinii remote (IP-ul care nu se termina in .1)
 ip addr | grep 192.168
 ```
 
-Ne afiseaza 
-
+Ne afiseaza: 
+```bash
 monitor@baseline:~$ ip addr | grep 192.168
     inet 192.168.100.237/24 brd 192.168.100.255 scope global dynamic noprefixroute enp0s8
-
     inet 192.168.49.1/24 brd 192.168.49.255 scope global br-4ef4fc0cb34f
-
+```
 
 Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
 ```bash
