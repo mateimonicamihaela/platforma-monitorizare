@@ -2,12 +2,78 @@
 
 ## Scopul Proiectului
 - [Descriere detaliata a scopului proiectului. ]
+Acest proiect reprezintă o platformă completă de monitorizare și automatizare DevOps, dezvoltată pentru a demonstra un flux de integrare continuă (CI/CD) și administrare a infrastructurii containerizate.
 
-Această aplicație monitorizează starea unui sistem (mașină virtuală, container etc.) și salvează periodic informații relevante despre resursele utilizate.
-Datele sunt arhivate automat pentru analiză ulterioară.
-Proiectul este containerizat cu Docker, orchestrat cu Kubernetes, automatizat cu Ansible, integrat în pipeline-uri CI/CD cu Jenkins și susținut de infrastructură creată cu Terraform.
+Aplicația urmărește starea sistemului (sau a unui container), colectând periodic informații despre:
+- utilizarea procesorului (CPU),
+- memoria disponibilă,
+- numărul de procese active,
+- spațiul de stocare (disk usage),
+- uptime, hostname, și alți parametri relevanți.
+
+Datele sunt salvate într-un fișier jurnal (system-state.log), care este actualizat la fiecare interval configurabil de timp.
+Un al doilea serviciu, de backup automat, monitorizează modificările fișierului de log și creează copii de siguranță etichetate temporal, asigurând persistența și trasabilitatea datelor în timp.
 
 ### Arhitectura proiectului
+
+⚙️ Arhitectura și componentele principale
+
+1. Cele 2 scripturi
+
+📜 Scriptul de monitorizare (monitoring.sh)
+- Rulează periodic și scrie în fișierul system-state.log informații despre starea sistemului.
+- Intervalul este configurabil prin variabila de mediu INTERVAL (implicit 5 secunde).
+- Poate fi executat atât local, cât și în container Docker.
+
+💾 Scriptul de backup (backup.py)
+- Monitorizează fișierul system-state.log și efectuează backup automat dacă detectează modificări.
+- Copiile sunt salvate în directorul /data/backup/ și denumite după data și ora curentă.
+- Include un mecanism de rotație automată (șterge backup-urile vechi, păstrând ultimele N fișiere).
+
+2. 🐳 Docker
+- Fiecare serviciu rulează în propriul container (monitorizare și backup).
+- Volumele partajate (/data) permit comunicarea și partajarea logurilor între containere.
+- Configurația este gestionată central prin fișierul docker-compose.yml.
+
+3. ☸️ Kubernetes
+- Aplicația este orchestrată într-un cluster Kubernetes.
+- Un deployment rulează ambele containere în același pod, alături de un container NGINX care expune fișierele de loguri.
+- Include un HPA (Horizontal Pod Autoscaler) care scalează automat aplicația între 2 și 10 replici pe baza utilizării CPU și memoriei.
+- Rulează într-un namespace dedicat: monitoring.
+
+4. 🧩 Ansible
+- Automatizează instalarea și configurarea mediului de rulare (inclusiv Docker și Docker Compose).
+- Gestionează deploy-ul aplicației pe mașini remote (VM-uri dedicate).
+- Include playbook-uri distincte pentru:
+  - instalarea Docker (install_docker.yml),
+  - rularea aplicației (deploy_platform.yml).
+
+5. 🏗️ Jenkins (CI/CD)
+- Integrează pipeline-uri pentru:
+  - build-ul imaginilor Docker;
+  - push-ul către Docker Hub;
+  - deploy automat în Kubernetes;
+  - testarea aplicației și verificarea backup-urilor.
+
+- Fiecare serviciu (monitoring și backup) are propriul pipeline în jenkins/pipelines/.
+
+6. 🌍 Terraform
+- Definește infrastructura de bază pentru rularea aplicației:
+  - crearea VM-urilor,
+  - configurarea rețelei și volumelor persistente,
+  - setarea backend-ului de stocare pentru starea Terraform.
+
+- Permite aprovizionarea rapidă a mediilor de test, staging și producție.
+
+
+📊 Beneficii și rezultate
+- 🔁 Monitorizare continuă și centralizată a resurselor.
+- 💾 Backup automat, sigur și trasabil al datelor.
+- 🧱 Containere ușor portabile, integrate în pipeline-uri DevOps.
+- ☸️ Scalabilitate automată prin Kubernetes HPA.
+- ⚙️ Automatizare completă a instalării și deploy-ului prin Ansible.
+- 🚀 CI/CD configurat end-to-end cu Jenkins.
+- ☁️ Infrastructură definită ca cod (IaC) prin Terraform.
 
 ```bash
 ├── ansible
@@ -190,23 +256,34 @@ docker rm monitoring-container backup-container
 Pentru rularea completă a aplicației se folosește un volum partajat și setări de rețea automate via Docker Compose.
 
 Intram in folderul Docker:
-- cd "/media/eu/More data/platforma-monitorizare/docker" 
+```bash
+cd "/media/eu/More data/platforma-monitorizare/docker" 
+```
 
 Construim imaginile Docker:
-- docker compose build 
+```bash
+docker compose build
+```
 
 Pornim serviciile in fundal:
-- docker compose up -d  
+```bash
+docker compose up -d  
+```
 
 Verificam daca ambele containere ruleaza:
-- docker ps      
+```bash
+docker ps      
+```
 
 Vizualizam logurile aplicatiei:
-- docker compose logs -f       
+```bash
+docker compose logs -f       
+```
 
 Oprim containerele:
-- docker compose down                              
-
+```bash
+docker compose down                              
+```
 
 🔗 Cum comunică între ele containerele
 
