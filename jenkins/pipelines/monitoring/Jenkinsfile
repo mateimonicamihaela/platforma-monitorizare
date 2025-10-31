@@ -1,1 +1,56 @@
-# Pipeline Jenkins pentru CI/CD al scriptului Python.
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        GIT_CREDENTIALS = 'github-ssh'
+        IMAGE_NAME = 'mateimonicamihaela/monitoring:latest'
+    }
+
+    stages {
+        stage('Checkout cod sursă') {
+            steps {
+                git(
+                    url: 'git@github.com:mateimonicamihaela/platforma-monitorizare.git',
+                    branch: 'main',
+                    credentialsId: "${GIT_CREDENTIALS}"
+                )
+            }
+        }
+
+        stage('Verificare sintaxă Bash') {
+            steps {
+                sh 'bash -n scripts/monitoring.sh'
+            }
+        }
+
+        stage('Construire imagine Docker') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME} -f docker/monitoring/Dockerfile .'
+            }
+        }
+
+        stage('Publicare imagine Docker') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh '''
+                    echo "$PASS" | docker login -u "$USER" --password-stdin
+                    docker push ${IMAGE_NAME}
+                    docker logout
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy pe server (prin Ansible)') {
+            steps {
+                sh 'ansible-playbook ansible/playbooks/deploy_platform.yml'
+            }
+        }
+    }
+
+    post {
+        success { echo 'Pipeline Monitoring finalizat cu succes!' }
+        failure { echo 'Eroare în pipeline Monitoring!' }
+    }
+}

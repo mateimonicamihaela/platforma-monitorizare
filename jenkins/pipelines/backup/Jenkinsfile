@@ -1,1 +1,50 @@
-# Pipeline Jenkins pentru CI/CD al scriptului python de backup.
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        GIT_CREDENTIALS = 'github-ssh'
+        IMAGE_NAME = 'mateimonicamihaela/backup:latest'
+    }
+
+    stages {
+        stage('Checkout cod sursă') {
+            steps {
+                git(
+                    url: 'git@github.com:mateimonicamihaela/platforma-monitorizare.git',
+                    branch: 'main',
+                    credentialsId: "${GIT_CREDENTIALS}"
+                )
+            }
+        }
+
+        stage('Verificare sintaxă Python') {
+            steps {
+                sh 'python3 -m py_compile scripts/backup.py'
+            }
+        }
+
+        stage('Construire imagine Docker') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME} -f docker/backup/Dockerfile .'
+            }
+        }
+
+        stage('Autentificare și publicare imagine') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh '''
+                    echo "$PASS" | docker login -u "$USER" --password-stdin
+                    docker push ${IMAGE_NAME}
+                    docker logout
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success { echo 'Pipeline Backup finalizat cu succes!' }
+        failure { echo 'Eroare în pipeline Backup!' }
+    }
+}

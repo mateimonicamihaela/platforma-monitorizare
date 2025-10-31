@@ -635,6 +635,76 @@ ansible monitoring_vm -m command -a "docker ps"
 - [Detalii cu restul cerintelor de CI/CD (cum ati creat userul nou ce are access doar la resursele proiectului, cum ati creat un View now pentru proiect, etc)]
 - [Daca ati implementat si punctul E optional atunci detaliati si setupul de minikube.]
 
+Instalam Jenkins
+
+```bash
+ # Actualizează sistemul
+sudo apt update && sudo apt upgrade -y
+# Instalează Java (Jenkins are nevoie de Java 17+)
+sudo apt install openjdk-17-jdk -y   
+# Verificam versiunea sa fie openjdk version "17.0.13" 2025-07-09         
+java -version                                 
+
+# Adaugă repository-ul oficial Jenkins
+
+curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null    
+
+# Instalează Jenkins
+sudo apt update
+sudo apt install jenkins -y
+
+# Pornește și activează serviciul
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+# Deschide portul 8080 (dacă e firewall activ)
+sudo ufw allow 8080
+sudo ufw reload
+
+# Accesează Jenkins în browser
+👉 http://localhost:8080
+
+sau, dacă e pe o mașină virtuală:
+👉 http://<IP_VM>:8080
+
+# Preia parola inițială
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+# Finalizează configurarea în browser
+1. Selectează "Install suggested plugins"
+
+2. Creează utilizatorul: monitoring-ci
+
+3. Accesează Dashboard-ul Jenkins 
+```
+
+Credentale necesare în Jenkins (Manage Jenkins → Credentials)
+
+```bash
+Creează următoarele:
+
+- Docker Hub (username+password)
+
+  - ID: dockerhub-credentials
+  - User: mateimonicamihaela (contul tău Docker Hub)
+  - Pass / token: (token Docker Hub)
+
+- SSH către VM pentru deploy (private key)
+
+ID: vm_ssh_key
+
+Username: monitor
+
+Private key: (cheia care are acces la VM-ul tău)
+
+Host: VM-ul pe care rulezi (poți specifica în Jenkinsfile ca variabilă)
+```
 
 ## Terraform și AWS
 - [Prerequiste]
