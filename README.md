@@ -164,13 +164,15 @@ Recomandare de rulare:
 
 ```bash
 # Rulare monitorizare
-cd /media/eu/More\ data/platforma-monitorizare
+cd ~/work/platforma-monitorizare/scripts/
+chmod +x monitoring.sh
+cd ~/work/platforma-monitorizare
 export INTERVAL=5
 export OUT_FILE=./data/system-state.log 
 ./scripts/monitoring.sh
 
 # Rulare backup
-cd /media/eu/More\ data/platforma-monitorizare
+cd ~/work/platforma-monitorizare
 export BACKUP_INTERVAL=5
 export SRC_FILE=./data/system-state.log 
 export BACKUP_DIR=./data/backup
