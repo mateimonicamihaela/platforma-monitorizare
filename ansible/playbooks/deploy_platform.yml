@@ -5,13 +5,13 @@
   gather_facts: true
 
   vars:
-    # Căi și setări implicite pe mașina țintă
+    # Căi pe mașina țintă
     app_dir: /opt/platforma-monitorizare
     compose_dir: /opt/platforma-monitorizare/docker
     data_dir: /opt/platforma-monitorizare/data
     repo_url: "https://github.com/mateimonicamihaela/platforma-monitorizare.git"
 
-    # Variabile de mediu pentru containere (scrise în .env, apoi citite de docker compose)
+    # Variabile de mediu pentru containere (scrise în .env)
     INTERVAL: "5"
     OUT_FILE: "/data/system-state.log"
     BACKUP_INTERVAL: "5"
@@ -37,18 +37,18 @@
         - "{{ data_dir }}/backup"
 
   tasks:
-    - name: "Verifică dacă directorul de destinație este un repo Git"
+    - name: "Verifică dacă {{ app_dir }} este repo Git"
       stat:
         path: "{{ app_dir }}/.git"
       register: gitdir
 
-    - name: "Șterge directorul dacă nu este repo Git (pregătim clonarea curată)"
+    - name: "Șterge {{ app_dir }} dacă nu este repo Git (clonare curată)"
       file:
         path: "{{ app_dir }}"
         state: absent
       when: not gitdir.stat.exists
 
-    - name: "Recreează directorul aplicației (după ștergere, dacă a fost cazul)"
+    - name: "Recreează directorul aplicației (dacă a fost șters)"
       file:
         path: "{{ app_dir }}"
         state: directory
@@ -59,10 +59,10 @@
         repo: "{{ repo_url }}"
         dest: "{{ app_dir }}"
         version: main
-        update: yes        # face pull dacă există repo
-        force: yes         # aliniază forțat cu remote (origin/main)
+        update: yes
+        force: yes
 
-    - name: "Generează fișierul .env folosit de docker compose"
+    - name: "Generează fișierul .env pentru docker compose"
       copy:
         dest: "{{ compose_dir }}/.env"
         mode: "0644"
@@ -75,45 +75,31 @@
           BACKUP_DIR={{ BACKUP_DIR }}
           MAX_BACKUPS={{ MAX_BACKUPS }}
 
-        # --- Dependențe pentru modulul docker_compose pe VM ---
-
-    - name: "Colectează lista de pachete instalate"
-      package_facts:
-        manager: auto
-
-    - name: "Instalează dependențele Python pentru Docker (APT)"
-      apt:
-        name:
-          - python3-docker
-          - python3-pip
-        state: present
-        update_cache: true
-
-    - name: "Fallback: instalează Docker SDK via pip dacă lipsește"
-      ansible.builtin.pip:
-        name: docker
-        state: present
-        executable: pip3
-      when: ansible_facts.packages is not defined or
-            ('python3-docker' not in ansible_facts.packages)
-
-    - name: "Instalează docker-compose (biblioteca Python v1, necesară modulului)"
-      ansible.builtin.pip:
-        name: docker-compose
-        state: present
-        executable: pip3
+    - name: "Validează configurația Docker Compose (CLI v2)"
+      shell: |
+        set -e
+        cd {{ compose_dir }}
+        docker compose config
+      args:
+        executable: /bin/bash
+        
+    - name: "Oprește și curăță proiectul Compose (down + remove orphans)"
+      community.docker.docker_compose_v2:
+        project_src: "{{ compose_dir }}"
+        state: absent
+        remove_orphans: true
 
     - name: "Pornește aplicația cu Docker Compose (pull + up)"
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: "{{ compose_dir }}"
-        env_file: "{{ compose_dir }}/.env"
-        state: present
-        pull: yes
-        restarted: yes
-        remove_orphans: yes
+        state: present          # up -d
+        pull: always            # trage imaginile
+        recreate: always        # forțează recrearea containerelor (restart efectiv)
+        remove_orphans: true    # elimină containerele orfane
+        wait: true              # așteaptă ca serviciile să fie 'healthy'/pornite
+        wait_timeout: 120
 
     # --- Verificări aplicație ---
-
     - name: "Așteaptă ca fișierul de loguri să fie creat"
       ansible.builtin.wait_for:
         path: "{{ data_dir }}/system-state.log"
@@ -124,7 +110,7 @@
       pause:
         seconds: 10
 
-    - name: "Caută fișiere de backup în directorul de date"
+    - name: "Caută fișiere de backup în {{ data_dir }}/backup"
       find:
         paths: "{{ data_dir }}/backup"
         patterns: "system-state-*.log"
@@ -144,7 +130,7 @@
       shell: |
         {% raw %}docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'{% endraw %}
       args:
-         executable: /bin/bash
+        executable: /bin/bash
       register: docker_ps
       changed_when: false
 

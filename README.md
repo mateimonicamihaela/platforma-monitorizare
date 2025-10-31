@@ -406,8 +406,7 @@ curl http://localhost:8080/logs/system-state.log
 
 # sau in browser:
 http://localhost:8080/logs/system-state.log
-
-```bash
+```
 
 
 (8) Vezi logurile din containere
@@ -450,6 +449,15 @@ curl http://192.168.49.2:32055/logs/backup/
 | 🧱 `backup`      | rulează `backup.py` – monitorizează fișierul de log și face copii în `/data/backup/`        | ❌ nu expune porturi    | ✅ salvează în `/data/backup/`       |
 | 🌐 `nginx`       | servește prin HTTP conținutul din `/data/` (loguri + backup-uri)                            | ✅ expune portul **80** | ✅ montează `/data` read-only        |
 
+Alternativă completă — „hard reset” (dacă vrem să curețam tot proiectul)
+```bash
+docker compose down --remove-orphans
+docker container prune -f
+docker image prune -f
+docker volume prune -f
+docker network prune -f
+docker compose up -d
+```
 
 
 ## Setup și Rulare in Ansible
@@ -609,7 +617,7 @@ Pe masina remote cu userul nou
 
 ```bash
 ssh monitor@192.168.100.238
-sudo docker ps
+docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
 sudo ls -lh /opt/platforma-monitorizare/data
 sudo ls -lh /opt/platforma-monitorizare/data/backup
 sudo tail -n 20 /opt/platforma-monitorizare/data/system-state.log
