@@ -2,6 +2,7 @@
 
 ## Scopul Proiectului
 - [Descriere detaliata a scopului proiectului. ]
+
 Acest proiect reprezintă o platformă completă de monitorizare și automatizare DevOps, dezvoltată pentru a demonstra un flux de integrare continuă (CI/CD) și administrare a infrastructurii containerizate.
 
 Aplicația urmărește starea sistemului (sau a unui container), colectând periodic informații despre:
@@ -154,7 +155,7 @@ Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
 | ------------------- | ------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | **INTERVAL**        | monitoring.sh | Intervalul în secunde la care se colectează informațiile despre sistem | `5`                                                                       | `INTERVAL=2 ./scripts/monitoring.sh`                         |
 | **OUT_FILE**        | monitoring.sh | Calea către fișierul în care se scrie starea sistemului                | `./system-state.log` *(local)*<br>`/data/system-state.log` *(Docker/K8s)* | `OUT_FILE=./data/system-state.log ./scripts/monitoring.sh`   |
-| **BACKUP_INTERVAL** | backup.py     | Intervalul în secunde la care se verifică modificarea logului          | `5`                                                                       | `BACKUP_INTERVAL=3 python3 scripts/backup.py`                |
+| **BACKUP_INTERVAL** | backup.py     | Intervalul în secunde la care se verifică modificarea logului          | `5`                                                                       | `BACKUP_INTERVAL=5 python3 scripts/backup.py`                |
 | **SRC_FILE**        | backup.py     | Calea fișierului `system-state.log` monitorizat pentru schimbări       | `./system-state.log` *(local)*<br>`/data/system-state.log` *(Docker/K8s)* | `SRC_FILE=./data/system-state.log python3 scripts/backup.py` |
 | **BACKUP_DIR**      | backup.py     | Directorul în care sunt salvate copiile logului                        | `./backup` *(local)*<br>`/data/backup` *(Docker/K8s)*                     | `BACKUP_DIR=./data/backup python3 scripts/backup.py`         |
 | **MAX_BACKUPS**     | backup.py     | Numărul maxim de backup-uri păstrate                                   | `10`                                                                      | `MAX_BACKUPS=5 python3 scripts/backup.py`                    |
@@ -198,7 +199,7 @@ Aplicația poate rula atât individual, cât și împreună, folosind servicii D
 ✅ 1) Construirea imaginilor Docker
 
 ```bash
-cd "/media/eu/More data/platforma-monitorizare/docker"
+cd ~/work/platforma-monitorizare/docker
 
 docker build -t mateimonicamihaela/monitoring:latest \
   --file monitoring/Dockerfile ../
@@ -259,7 +260,7 @@ Pentru rularea completă a aplicației se folosește un volum partajat și setă
 
 Intram in folderul Docker:
 ```bash
-cd "/media/eu/More data/platforma-monitorizare/docker" 
+cd ~/work/platforma-monitorizare/docker
 ```
 
 Construim imaginile Docker:
@@ -342,6 +343,7 @@ docker push mateimonicamihaela/backup:latest
 
 (1) Precondiții (Porneste Minikube + Activează metrics-server (pentru HPA))
 ```bash
+cd ~/work/platforma-monitorizare
 minikube start
 minikube addons enable metrics-server
 kubectl get pods -A | grep metrics
@@ -366,11 +368,12 @@ kubectl apply -f k8s/namespace.yaml
 kubectl -n monitoring apply -f k8s/nginx-config.yaml
 ```
 
-(4) Deployment (2 replici, 3 containere/pod) + Service
+(4) Creati un deployment cu 2 replici ce ruleaza in acelasi pod ambele containere,plus un container nginx ce expunee fisierul de loguri de sistem --> 3 containere/pod + Service
+
 ```bash
 kubectl -n monitoring apply -f k8s/deployment.yaml
 ```
-(5) HPA pe CPU și memorie (min=2, max=10)
+(5) Adaugati un HPA pe baza de CPU și memorie configurat cu min replicas 2 si max replicas 10)
 ```bash
 kubectl -n monitoring apply -f k8s/hpa.yaml
 ```
@@ -384,13 +387,27 @@ kubectl -n monitoring describe hpa platforma-monitorizare-hpa
 kubectl top pods -n monitoring   # necesită metrics-server
 ```
 
-(7) Deschide în browser (URL generat de Minikube):
+(7) Acces la aplicație (Nginx care servește logurile)
+
+Varianta 1 - Deschide în browser (URL generat de Minikube):
 ```bash
 minikube service -n monitoring platforma-monitorizare --url
+
 # Accesează:
-#   <URL>/logs/system-state.log
-#   <URL>/logs/backup/   (listă de fișiere; autoindex activ din ConfigMap)
+#   <URL>/logs/system-state.log 
+#   <URL>/logs/backup/   (listă de fișiere; autoindex activ din ConfigMap) 
 ```
+Varianta 2 - Port-forward (convenabil pentru demo)
+```bash
+kubectl -n monitoring port-forward svc/platforma-monitorizare 8080:80
+
+# apoi în alt terminal:
+curl http://localhost:8080/logs/system-state.log
+
+# sau in browser:
+http://localhost:8080/logs/system-state.log
+
+```bash
 
 
 (8) Vezi logurile din containere
@@ -409,18 +426,29 @@ kubectl -n monitoring logs deploy/platforma-monitorizare -c backup --tail=30 -f
 
 Logul curent al sistemului:
 
-http://192.168.49.2:30559/logs/system-state.log
+http://192.168.49.2:32055/logs/system-state.log
 
 Backup-urile efectuate
 
-http://192.168.49.2:30559/logs/backup/
+http://192.168.49.2:32055/logs/backup/
 
 
 🧠 Cum se verifică in terminal:
 
-curl http://192.168.49.2:30559/logs/system-state.log
+curl http://192.168.49.2:32055/logs/system-state.log
 
-curl http://192.168.49.2:30559/logs/backup/
+curl http://192.168.49.2:32055/logs/backup/
+
+
+🧩 Structura actuală a Pod-ului (din k8s/deployment.yaml)
+
+În Pod avem 3 containere care rulează împreună și partajează un volum /data comun:
+
+| Container        | Rol                                                                                         | Porturi expuse         | Persistență                         |
+| ---------------- | ------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------- |
+| 🖥️ `monitoring` | rulează `monitoring.sh` – colectează starea sistemului și scrie în `/data/system-state.log` | ❌ nu expune porturi    | ✅ scrie în `/data/system-state.log` |
+| 🧱 `backup`      | rulează `backup.py` – monitorizează fișierul de log și face copii în `/data/backup/`        | ❌ nu expune porturi    | ✅ salvează în `/data/backup/`       |
+| 🌐 `nginx`       | servește prin HTTP conținutul din `/data/` (loguri + backup-uri)                            | ✅ expune portul **80** | ✅ montează `/data` read-only        |
 
 
 
@@ -467,7 +495,7 @@ echo “cheie ssh publica de pe masina client” >> ~/.ssh/authorized_keys
 cat ~/.ssh/authorized_keys
 ```
 
-Install ssh server pe masina remote
+Instalam ssh server pe masina remote
 ```bash
 sudo apt update
 sudo apt install -y openssh-server
@@ -482,20 +510,28 @@ ip addr | grep 192.168
 Ne afiseaza: 
 ```bash
 monitor@baseline:~$ ip addr | grep 192.168
-    inet 192.168.100.237/24 brd 192.168.100.255 scope global dynamic noprefixroute enp0s8
+    inet 192.168.100.238/24 brd 192.168.100.255 scope global dynamic noprefixroute enp0s8
     inet 192.168.49.1/24 brd 192.168.49.255 scope global br-4ef4fc0cb34f
 ```
 
 Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
 ```bash
-ssh monitor@192.168.100.237
+ssh monitor@192.168.100.238
 ```
 
 (2) Ansible pe mașina locala + inventory
 
-Install Ansible pe masina client (ubuntu2204).
+Instalam pip pentru Python3
 ```bash
-python3 -m pip install --user ansible
+sudo apt update
+sudo apt install -y python3-pip
+pip3 --version
+```
+
+Instalam Ansible pe masina client (ubuntu2204).
+```bash
+sudo apt update
+sudo apt install -y ansible 
 ansible --version
 ```
 
@@ -506,7 +542,7 @@ cat ~/.ssh/id_rsa.pub
 
 Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
 ```bash
-ssh monitor@192.168.100.237
+ssh monitor@192.168.100.238
 ```
 Asigură-te că există Python 3 pe VM (Ansible are nevoie)
 ```bash
@@ -572,7 +608,7 @@ Verificări manuale:
 Pe masina remote cu userul nou
 
 ```bash
-ssh monitor@192.168.100.237
+ssh monitor@192.168.100.238
 sudo docker ps
 sudo ls -lh /opt/platforma-monitorizare/data
 sudo ls -lh /opt/platforma-monitorizare/data/backup

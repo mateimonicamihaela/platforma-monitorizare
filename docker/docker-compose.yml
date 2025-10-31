@@ -1,7 +1,3 @@
-# Configurație pentru rularea ambelor containere Docker.
-
-version: "3.9"
-
 services:
   monitoring:
     build:
