@@ -8,15 +8,12 @@ pipeline {
     }
 
     stages {
-        stage('Checkout cod sursă') {
-            steps {
-                git(
-                    url: 'git@github.com:mateimonicamihaela/platforma-monitorizare.git',
-                    branch: 'main',
-                    credentialsId: "${GIT_CREDENTIALS}"
-                )
-            }
-        }
+    stage('Checkout') {
+      steps {
+        // DOAR asta, folosește SCM-ul setat la job
+        checkout scm
+      }
+    }
 
         stage('Verificare sintaxă Bash') {
             steps {
