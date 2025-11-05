@@ -518,13 +518,13 @@ ip addr | grep 192.168
 Ne afiseaza: 
 ```bash
 monitor@baseline:~$ ip addr | grep 192.168
-    inet 192.168.100.238/24 brd 192.168.100.255 scope global dynamic noprefixroute enp0s8
+    inet 192.168.100.240/24 brd 192.168.100.255 scope global dynamic noprefixroute enp0s8
     inet 192.168.49.1/24 brd 192.168.49.255 scope global br-4ef4fc0cb34f
 ```
 
 Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
 ```bash
-ssh monitor@192.168.100.238
+ssh monitor@192.168.100.240
 ```
 
 (2) Ansible pe mașina locala + inventory
@@ -550,7 +550,7 @@ cat ~/.ssh/id_rsa.pub
 
 Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
 ```bash
-ssh monitor@192.168.100.238
+ssh monitor@192.168.100.240
 ```
 Asigură-te că există Python 3 pe VM (Ansible are nevoie)
 ```bash
@@ -616,7 +616,7 @@ Verificări manuale:
 Pe masina remote cu userul nou
 
 ```bash
-ssh monitor@192.168.100.238
+ssh monitor@192.168.100.240
 docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
 sudo ls -lh /opt/platforma-monitorizare/data
 sudo ls -lh /opt/platforma-monitorizare/data/backup

@@ -56,12 +56,12 @@ pipeline {
                             sudo apt-get update -y
                             sudo apt-get install -y ansible python3-pip
                         else
-                            echo "[WARN] Nu pot instala ansible automat (nu există apt-get); continui și presupun că e instalat."
+                            echo "[WARN] Nu pot instala ansible automat (nu există apt-get); continui si presupun că e instalat."
                         fi
                     fi
                     ansible --version || true
 
-                    echo "[INFO] Instalez colecțiile Ansible necesare (community.docker)..."
+                    echo "[INFO] Instalez colectiile Ansible necesare (community.docker)..."
                     cd ansible
                     ansible-galaxy collection install -r requirements.yml -f
 
