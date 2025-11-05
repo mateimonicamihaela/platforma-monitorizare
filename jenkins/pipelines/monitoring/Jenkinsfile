@@ -1,19 +1,26 @@
 pipeline {
     agent any
 
+    options {
+        // evităm "Declarative: Checkout SCM" implicit (avem deja stage-ul tău Checkout)
+        skipDefaultCheckout(true)
+        timestamps()
+        ansiColor('xterm')
+    }
+
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
-        GIT_CREDENTIALS = 'github-ssh'
+        GIT_CREDENTIALS = 'github-ssh'   // (nefolosit acum); 
         IMAGE_NAME = 'mateimonicamihaela/monitoring:latest'
     }
 
     stages {
-    stage('Checkout') {
-      steps {
-        // DOAR asta, folosește SCM-ul setat la job
-        checkout scm
-      }
-    }
+        stage('Checkout') {
+            steps {
+                // DOAR asta, folosește SCM-ul setat la job
+                checkout scm
+            }
+        }
 
         stage('Verificare sintaxă Bash') {
             steps {
@@ -41,7 +48,7 @@ pipeline {
 
         stage('Deploy pe server (prin Ansible)') {
             steps {
-                 sh '''
+                sh '''
                     set -e
 
                     echo "[INFO] Verific/instalez Ansible pe agentul Jenkins..."
@@ -64,7 +71,6 @@ pipeline {
                 '''
             }
         }
-
     }
 
     post {
