@@ -5,7 +5,6 @@ pipeline {
         // evităm "Declarative: Checkout SCM" implicit (avem deja stage-ul tău Checkout)
         skipDefaultCheckout(true)
         timestamps()
-        ansiColor('xterm')
     }
 
     environment {
