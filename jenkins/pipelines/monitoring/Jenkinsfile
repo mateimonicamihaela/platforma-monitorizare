@@ -9,8 +9,12 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
-        GIT_CREDENTIALS = 'github-ssh'   // (nefolosit acum); 
-        IMAGE_NAME = 'mateimonicamihaela/monitoring:latest'
+        GIT_CREDENTIALS       = 'github-ssh'
+        IMAGE_NAME            = 'mateimonicamihaela/monitoring:latest'
+        // Forțăm UTF-8 pentru tot pipeline-ul
+        LANG                  = 'C.UTF-8'
+        LC_ALL                = 'C.UTF-8'
+        PYTHONIOENCODING      = 'UTF-8'
     }
 
     stages {
@@ -49,6 +53,11 @@ pipeline {
             steps {
                 sh '''
                     set -e
+
+                         # Siguranță: exportăm din nou locale-urile în subshell-ul acestui stage
+                        export LANG="${LANG:-C.UTF-8}"
+                        export LC_ALL="${LC_ALL:-C.UTF-8}"
+                        export PYTHONIOENCODING="${PYTHONIOENCODING:-UTF-8}"
 
                         echo "[INFO] Upgrade ansible pe agentul Jenkins (user-local)..."
                         python3 -m pip install --user --upgrade "pip<24.1" || true
