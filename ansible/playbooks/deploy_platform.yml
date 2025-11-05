@@ -65,7 +65,7 @@
         update: yes
         force: yes
 
-    - name: "Generează fișierul .env pentru docker compose"
+    - name: "Generează fisierul .env pentru docker compose"
       copy:
         dest: "{{ compose_dir }}/.env"
         mode: "0644"
@@ -86,7 +86,7 @@
       args:
         executable: /bin/bash
 
-    - name: "Oprește și curăță proiectul Compose (down + remove orphans)"
+    - name: "Opreste si curata proiectul Compose (down + remove orphans)"
       community.docker.docker_compose_v2:
         project_src: "{{ compose_dir }}"
         state: absent

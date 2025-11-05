@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     options {
-        // evităm "Declarative: Checkout SCM" implicit (avem deja stage-ul tău Checkout)
+        // evităm "Declarative: Checkout SCM" implicit (avem deja stage-ul Checkout)
         skipDefaultCheckout(true)
         timestamps()
     }
@@ -50,23 +50,18 @@ pipeline {
                 sh '''
                     set -e
 
-                    echo "[INFO] Verific/instalez Ansible pe agentul Jenkins..."
-                    if ! command -v ansible >/dev/null 2>&1; then
-                        if command -v apt-get >/dev/null 2>&1; then
-                            sudo apt-get update -y
-                            sudo apt-get install -y ansible python3-pip
-                        else
-                            echo "[WARN] Nu pot instala ansible automat (nu există apt-get); continui si presupun că e instalat."
-                        fi
-                    fi
-                    ansible --version || true
+                        echo "[INFO] Upgrade ansible pe agentul Jenkins (user-local)..."
+                        python3 -m pip install --user --upgrade "pip<24.1" || true
+                        python3 -m pip install --user "ansible==9.*"
+                        export PATH="$HOME/.local/bin:$PATH"
+                        ansible --version
 
-                    echo "[INFO] Instalez colectiile Ansible necesare (community.docker)..."
-                    cd ansible
-                    ansible-galaxy collection install -r requirements.yml -f
+                        echo "[INFO] Instalez colecțiile Ansible necesare (community.docker compatibile cu 2.16)..."
+                        cd ansible
+                        ansible-galaxy collection install -r requirements.yml -f
 
-                    echo "[INFO] Rulez playbook-ul cu inventarul explicit..."
-                    ansible-playbook -i inventory.ini playbooks/deploy_platform.yml
+                        echo "[INFO] Rulez playbook-ul cu inventarul explicit..."
+                        ansible-playbook -i inventory.ini playbooks/deploy_platform.yml
                 '''
             }
         }
