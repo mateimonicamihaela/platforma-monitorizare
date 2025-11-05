@@ -4,6 +4,9 @@
   become: true
   gather_facts: true
 
+  collections:
+    - community.docker
+
   vars:
     # Căi pe mașina țintă
     app_dir: /opt/platforma-monitorizare
@@ -82,7 +85,7 @@
         docker compose config
       args:
         executable: /bin/bash
-        
+
     - name: "Oprește și curăță proiectul Compose (down + remove orphans)"
       community.docker.docker_compose_v2:
         project_src: "{{ compose_dir }}"

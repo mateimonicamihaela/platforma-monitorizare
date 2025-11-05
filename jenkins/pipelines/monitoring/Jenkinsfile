@@ -41,9 +41,30 @@ pipeline {
 
         stage('Deploy pe server (prin Ansible)') {
             steps {
-                sh 'ansible-playbook ansible/playbooks/deploy_platform.yml'
+                 sh '''
+                    set -e
+
+                    echo "[INFO] Verific/instalez Ansible pe agentul Jenkins..."
+                    if ! command -v ansible >/dev/null 2>&1; then
+                        if command -v apt-get >/dev/null 2>&1; then
+                            sudo apt-get update -y
+                            sudo apt-get install -y ansible python3-pip
+                        else
+                            echo "[WARN] Nu pot instala ansible automat (nu există apt-get); continui și presupun că e instalat."
+                        fi
+                    fi
+                    ansible --version || true
+
+                    echo "[INFO] Instalez colecțiile Ansible necesare (community.docker)..."
+                    cd ansible
+                    ansible-galaxy collection install -r requirements.yml -f
+
+                    echo "[INFO] Rulez playbook-ul cu inventarul explicit..."
+                    ansible-playbook -i inventory.ini playbooks/deploy_platform.yml
+                '''
             }
         }
+
     }
 
     post {
