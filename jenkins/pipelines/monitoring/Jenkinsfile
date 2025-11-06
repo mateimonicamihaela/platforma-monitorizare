@@ -11,7 +11,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         GIT_CREDENTIALS       = 'github-ssh'
         IMAGE_NAME            = 'mateimonicamihaela/monitoring:latest'
-        // Forțăm UTF-8 pentru tot pipeline-ul
+        // Fortam UTF-8 pentru tot pipeline-ul
         LANG                  = 'C.UTF-8'
         LC_ALL                = 'C.UTF-8'
         PYTHONIOENCODING      = 'UTF-8'
@@ -25,7 +25,7 @@ pipeline {
             }
         }
 
-        stage('Verificare sintaxă Bash') {
+        stage('Verificare sintaxa Bash') {
             steps {
                 sh 'bash -n scripts/monitoring.sh'
             }
@@ -54,7 +54,7 @@ pipeline {
                 sh '''
                     set -e
 
-                         # Siguranță: exportăm din nou locale-urile în subshell-ul acestui stage
+                         # Siguranță: exportam din nou locale-urile în subshell-ul acestui stage
                         export LANG="${LANG:-C.UTF-8}"
                         export LC_ALL="${LC_ALL:-C.UTF-8}"
                         export PYTHONIOENCODING="${PYTHONIOENCODING:-UTF-8}"
@@ -65,7 +65,7 @@ pipeline {
                         export PATH="$HOME/.local/bin:$PATH"
                         ansible --version
 
-                        echo "[INFO] Instalez colecțiile Ansible necesare (community.docker compatibile cu 2.16)..."
+                        echo "[INFO] Instalez colectiile Ansible necesare (community.docker compatibile cu 2.16)..."
                         cd ansible
                         ansible-galaxy collection install -r requirements.yml -f
 
