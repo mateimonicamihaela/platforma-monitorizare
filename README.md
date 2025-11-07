@@ -18,7 +18,7 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 
 1. Cele 2 scripturi:
 
-  📜 Scriptul de monitorizare (monitoring.sh)
+  💾 Scriptul de monitorizare (monitoring.sh)
 - Rulează periodic și scrie în fișierul system-state.log informații despre starea sistemului.
 - Intervalul este configurabil prin variabila de mediu INTERVAL (implicit 5 secunde).
 - Poate fi executat atât local, cât și în container Docker.
@@ -127,7 +127,6 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
     ├── variables.tf
     └── versions.tf
 ```
-Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
 
 ## Structura Proiectului
 
@@ -154,7 +153,6 @@ Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
     - `playbooks/install_docker.yml`: playbook care instalează Docker Engine și dependințele pe mașina remote, pregătind mediul de execuție.
     - `playbooks/deploy_platform.yml`: playbook care clonează repository-ul, copiază fișierele docker-compose.yml și rulează containerele aplicației folosind docker compose up -d.
 
-
 - `/jenkins/pipelines`:
     - `monitoring/Jenkinsfile`: definește pipeline-ul CI/CD pentru containerul de monitorizare:
         - verifică sintaxa Bash (bash -n)
@@ -164,12 +162,19 @@ Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
     - `backup/Jenkinsfile`: definește pipeline-ul CI/CD pentru containerul de backup (scriptul Python): build → push → deploy.
 
 - `/terraform`:
-    - `main.tf`: creează infrastructura AWS (EC2, S3, SSH key-pair).
-    - `backend.tf`: salvează state-ul Terraform în S3.
+    - `main.tf`: creează infrastructura simulată AWS (prin LocalStack):
+        - instanță EC2 (mașina vm-monitoring),
+        - bucket S3 pentru artefacte,
+        - key pair SSH (monitor-key)
+        - security group cu acces SSH (22) și HTTP (80).
+    - `backend.tf`: configurează stocarea remote a state-ului Terraform în bucketul S3 (tf-state-platforma-monitorizare).
+    - `variables.tf`: definește variabilele reutilizabile (nume instanță, regiune, tag-uri).
+    - `outputs.tf`: afișează valorile utile după creare (de ex. instance_id, bucket_name, ip).
+    - `providers.tf`: definește provider-ul AWS, conectat la LocalStack prin endpoint-uri locale.
+    - `locals.tf`: conține tag-uri și variabile locale comune tuturor resurselor.
+    - `versions.tf`: stabilește versiunile minime compatibile de Terraform și de provider AWS.
 
-## Setup și Rulare
-- [Instrucțiuni de setup local și remote. Aici trebuiesc puse absolut toate informatiile necesare pentru a putea instala si rula proiectul. De exemplu listati aici si ce tool-uri trebuiesc instalate (Ansible, SSH config, useri, masini virtuale noi daca este cazul, etc) pasii de instal si comenzi].
-- [Cand includeti instructiuni folositi blocul de code markdown cu limbajul specific codului ]
+## Setup și Rulare pentru cele 2 scripturi
 
 🖥️ scripts/monitoring.sh
 
@@ -374,9 +379,8 @@ docker push mateimonicamihaela/backup:latest
 
 
 ## Setup și Rulare in Kubernetes
-- [Bonus: Adaugati si o diagrama cu containerele si setupul de Kubernetes] 
 
-(1) Precondiții (Porneste Minikube + Activează metrics-server (pentru HPA))
+1. Preecondiții (Porneste Minikube + Activează metrics-server (pentru HPA))
 ```bash
 cd ~/work/platforma-monitorizare
 minikube start
@@ -391,29 +395,29 @@ minikube image load mateimonicamihaela/monitoring:latest
 minikube image load mateimonicamihaela/backup:latest
 ```
 
-(2) Namespace: aplicatia trebuie sa ruleze intr-un namespace cu numele monitoring
+2.  Namespace: aplicatia trebuie sa ruleze intr-un namespace cu numele monitoring
 
 k8s/namespace.yaml
 ```bash
 kubectl apply -f k8s/namespace.yaml
 ```
 
-(3) ConfigMap Nginx (pentru listare /logs și redirect)
+3. ConfigMap Nginx (pentru listare /logs și redirect)
 ```bash
 kubectl -n monitoring apply -f k8s/nginx-config.yaml
 ```
 
-(4) Creati un deployment cu 2 replici ce ruleaza in acelasi pod ambele containere,plus un container nginx ce expunee fisierul de loguri de sistem --> 3 containere/pod + Service
+4. Creati un deployment cu 2 replici ce ruleaza in acelasi pod ambele containere,plus un container nginx ce expunee fisierul de loguri de sistem --> 3 containere/pod + Service
 
 ```bash
 kubectl -n monitoring apply -f k8s/deployment.yaml
 ```
-(5) Adaugati un HPA pe baza de CPU și memorie configurat cu min replicas 2 si max replicas 10)
+5. Adaugati un HPA pe baza de CPU și memorie configurat cu min replicas 2 si max replicas 10)
 ```bash
 kubectl -n monitoring apply -f k8s/hpa.yaml
 ```
 
-(6) Verificare rapidă & acces
+6. Verificare rapidă & acces
 
 ```bash
 kubectl -n monitoring get pods
@@ -422,7 +426,7 @@ kubectl -n monitoring describe hpa platforma-monitorizare-hpa
 kubectl top pods -n monitoring   # necesită metrics-server
 ```
 
-(7) Acces la aplicație (Nginx care servește logurile)
+7. Acces la aplicație (Nginx care servește logurile)
 
 Varianta 1 - Deschide în browser (URL generat de Minikube):
 ```bash
@@ -444,7 +448,7 @@ http://localhost:8080/logs/system-state.log
 ```
 
 
-(8) Vezi logurile din containere
+8. Vezi logurile din containere
 
 Monitorizare:
 ```bash
@@ -499,7 +503,7 @@ docker compose up -d
 - [Includeti aici pasii detaliati de configurat si rulat Ansible pe masina noua]
 - [Descrieti cum verificam ca totul a rulat cu succes? Cateva comenzi prin care verificam ca Ansible a instalat ce trebuia]
 
-(1) Bootstrap VM nou + user nou (o singură dată)
+1. Bootstrap VM nou + user nou (o singură dată)
 
  Pe masina remote (masina noua) adaugam un user nou si ii setam cheia de ssh 
 
@@ -562,7 +566,7 @@ Revenim pe masina client (ubuntu2204) si incercam sa facem ssh cu userul monitor
 ssh monitor@192.168.100.240
 ```
 
-(2) Ansible pe mașina locala + inventory
+2. Ansible pe mașina locala + inventory
 
 Instalam pip pentru Python3
 ```bash
@@ -616,7 +620,7 @@ ansible monitoring_vm -m ping
 ```
 
 
-(3) Playbook 1 — Instalează Docker (Docker CE + compose plugin)
+3. Playbook 1 — Instalează Docker (Docker CE + compose plugin)
 
 ansible/playbooks/install_docker.yml
 
@@ -627,7 +631,7 @@ ansible-playbook playbooks/install_docker.yml
 ```
 
 
-(4) Playbook 2 — Deploy cu docker compose + verificări log & backup
+4. Playbook 2 — Deploy cu docker compose + verificări log & backup
 
 Acest playbook:
 
@@ -664,13 +668,9 @@ ansible monitoring_vm -m command -a "docker ps"
 ```
 
 
-
 ## Jenkins CI/CD și Automatizari
-- [Descriere pipeline-uri Jenkins. Puneti aici cat mai detaliat ce face fiecare pipeline de jenkins cu poze facute la pipeline in Blue Ocean. Detaliati cat puteti de mult procesul de CI/CD folosit.]
-- [Detalii cu restul cerintelor de CI/CD (cum ati creat userul nou ce are access doar la resursele proiectului, cum ati creat un View now pentru proiect, etc)]
-- [Daca ati implementat si punctul E optional atunci detaliati si setupul de minikube.]
-
 ![Jenkins Logo](imagini/jenkins-logo.png)
+
 Instalam Jenkins
 
 ```bash
@@ -822,7 +822,7 @@ Verifică sintaxa scriptului Bash, construiește imaginea Docker, o publică în
     ![Pipeline Monitoring Stage](imagini/pipeline-monitoring-stage.png)
     ![Pipeline Monitoring Blue Ocean](imagini/pipeline-monitoring-blueocean.png)
 
-
+Continua 
 
 ## 🏗️ Terraform și AWS - Infrastructura Terraform pentru platforma-monitorizare (cu LocalStack Pro)
 
