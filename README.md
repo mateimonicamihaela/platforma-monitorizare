@@ -802,6 +802,7 @@ Verifică sintaxa scriptului Bash, construiește imaginea Docker, o publică în
   ```
 
 Exemplu inventar:
+
     ```bash
     [monitoring_vm]     
     vm1 ansible_host=192.168.100.240 ansible_user=monitor ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/id_rsa
@@ -811,16 +812,21 @@ Exemplu inventar:
     ```
 
 Rezultat așteptat:
-      La finalul rulării:
-    ```bash
-    docker ps
-    # backup-service       mateimonicamihaela/backup:latest       Up ...
-    # monitoring-service   mateimonicamihaela/monitoring:latest   Up ...
-    ```
 
-Imagini Pipeline Monitoring - Stage & Blue Ocean
+La finalul rulării:
+
+```bash
+docker ps
+# backup-service       mateimonicamihaela/backup:latest       Up ...
+# monitoring-service   mateimonicamihaela/monitoring:latest   Up ...
+```
+
+### Imagine Pipeline Monitoring - Stage 
 
 ![Pipeline Monitoring Stage](imagini/pipeline-monitoring-stage.png)
+
+### Imagine Pipeline Monitoring - Blue Ocean
+
 ![Pipeline Monitoring Blue Ocean](imagini/pipeline-monitoring-blueocean.png)
 
 Continua 
