@@ -886,9 +886,10 @@ docker ps
 
 ### Imagine Pipeline Backup - Blue Ocean
 
-![Pipeline Backup Stage](pipeline-backup-blueocean.png)
+![Pipeline Backup Stage](imagini/pipeline-backup-blueocean.png)
 
 2️⃣ Automatizări și configurări Jenkins
+
 🔐 2.1 Crearea unui utilizator dedicat proiectului
 
 Obiectiv:
@@ -950,11 +951,18 @@ Ce face playbook-ul:
 4️⃣ Cerințe CI/CD suplimentare îndeplinite
 
 ✅ Utilizator dedicat cu roluri limitate
+
 ✅ View separat pentru proiect
+
 ✅ Build manual sau automat prin webhook GitHub
+
 ✅ Artefacte publicate în Docker Hub
+
 ✅ Credențiale stocate securizat în Jenkins Credentials
+
 ✅ Ansible integrat pentru deploy automat
+
+
 
 5️⃣ (Opțional) Punctul E – Minikube
 
@@ -1006,6 +1014,7 @@ După rularea pipeline-ului cu succes, Jenkins afișează Finished: SUCCESS și 
 backup-service       mateimonicamihaela/backup:latest
 monitoring-service   mateimonicamihaela/monitoring:latest
 ```
+
 
 
 ## 🏗️ Terraform și AWS - Infrastructura Terraform pentru platforma-monitorizare (cu LocalStack Pro)
