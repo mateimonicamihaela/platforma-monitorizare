@@ -1,4 +1,4 @@
-# Platforma de Monitorizare a Starii unui Sistem
+# 🛠️ Platforma de Monitorizare a Starii unui Sistem 🛠️
 
 ## Scopul Proiectului
 
@@ -16,7 +16,7 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 
 ⚙️ Arhitectura și componentele principale
 
-1. Cele 2 scripturi
+1. Cele 2 scripturi:
 
   📜 Scriptul de monitorizare (monitoring.sh)
 - Rulează periodic și scrie în fișierul system-state.log informații despre starea sistemului.
@@ -127,14 +127,6 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
     ├── variables.tf
     └── versions.tf
 ```
-
-Acest subpunct este BONUS.
-- [Desenati in excalidraw sau in orice tool doriti arhitectura generala a proiectului si includeti aici poza cu descrierea pasilor]
-
-- Acesta este un exemplu de inserare de imagine in README.MD. Puneti imagine in directorul de imagini si o inserati asa:
-
-![Jenkins Logo](imagini/jenkins-logo.png)
-
 Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
 
 ## Structura Proiectului
@@ -678,6 +670,7 @@ ansible monitoring_vm -m command -a "docker ps"
 - [Detalii cu restul cerintelor de CI/CD (cum ati creat userul nou ce are access doar la resursele proiectului, cum ati creat un View now pentru proiect, etc)]
 - [Daca ati implementat si punctul E optional atunci detaliati si setupul de minikube.]
 
+![Jenkins Logo](imagini/jenkins-logo.png)
 Instalam Jenkins
 
 ```bash
@@ -749,14 +742,92 @@ Private key: (cheia care are acces la VM-ul tău)
 Host: VM-ul pe care rulezi (poți specifica în Jenkinsfile ca variabilă)
 ```
 
-## Terraform și AWS
-- [Prerequiste]
-- [Instrucțiuni pentru rularea Terraform și configurarea AWS]
-- [Daca o sa folositi pentru testare localstack in loc de AWS real puneti aici toti pasii pentru install localstack.]
-- [Adaugati instructiunile pentru ca verifica faptul ca Terraform a creat corect infrastructura]
-## 🏗️ Infrastructura Terraform pentru platforma-monitorizare (cu LocalStack Pro)
+
+## 1️⃣ Pipeline-uri Jenkins (detaliat)
+
+> **Repository:** `platforma-monitorizare`  
+> **Pipeline-uri:**
+> - `pipeline-monitoring` – CI/CD pentru containerul *monitoring* (script Bash)
+> - `pipeline-backup` – CI/CD pentru containerul *backup* (script Python)
+
+---
+
+### 🚀 1.1 Pipeline: Monitoring
+
+**Scop:**  
+Verifică sintaxa scriptului Bash, construiește imaginea Docker, o publică în Docker Hub și face *deploy* pe VM via Ansible.
+
+**Locație Jenkinsfile:**  
+`jenkins/pipelines/monitoring/Jenkinsfile`
+
+**Credențiale folosite:**
+- `dockerhub-credentials` – pentru autentificare Docker Hub
+- `github-ssh` – cheie SSH pentru acces Git (opțional)
+
+**Condiții pe agentul Jenkins:**
+- Utilizatorul `jenkins` face parte din grupul `docker`  
+- Acces SSH configurat către `monitor@192.168.100.240`
+- Cheia privată se află la `/var/lib/jenkins/.ssh/id_rsa`
+- `ansible==9.*` și `community.docker==3.10.3` sunt instalate local
+
+**Etapele pipeline-ului:**
+1. **Checkout:**  
+   Obține codul din GitHub (branch `main`).
+
+2. **Verificare sintaxă Bash:**  
+   ```bash
+   bash -n scripts/monitoring.sh
+  ```
+    Dacă există erori, buildul se oprește.
+
+3. **Construire imagine Docker:**
+  ```bash
+   docker build -t mateimonicamihaela/monitoring:latest -f docker/monitoring/Dockerfile .
+   ```
+4. **Publicare imagine Docker:**
+  - Autentificare cu docker login
+  - Publicare imagine:
+  ```bash
+  docker push mateimonicamihaela/monitoring:latest
+  ```
+  - Logout după încărcare
+
+5. **Deploy pe server (prin Ansible):**
+  - Setează locale UTF-8 pentru Ansible
+  - Rulează upgrade pip și instalează ansible==9.*
+  - Instalează colecțiile din ansible/requirements.yml
+  - Rulează playbookul:
+  ```bash
+  ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
+  ```
+
+    Exemplu inventar:
+    ```bash
+    [monitoring_vm]     
+    vm1 ansible_host=192.168.100.240 ansible_user=monitor ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/id_rsa
+
+    [all:vars]
+    ansible_python_interpreter=/usr/bin/python3
+    ```
+
+    Rezultat așteptat:
+      La finalul rulării:
+    ```bash
+    docker ps
+    # backup-service       mateimonicamihaela/backup:latest       Up ...
+    # monitoring-service   mateimonicamihaela/monitoring:latest   Up ...
+    ```
+    Imagini Pipeline Monitoring - Stage & Blue Ocean
+
+    ![Pipeline Monitoring Stage](imagini/pipeline-monitoring-stage.png)
+    ![Pipeline Monitoring Blue Ocean](imagini/pipeline-monitoring-blueocean.png)
+
+
+
+## 🏗️ Terraform și AWS - Infrastructura Terraform pentru platforma-monitorizare (cu LocalStack Pro)
 
 Acest proiect folosește **Terraform** pentru a defini și gestiona infrastructura necesară rularii aplicației „platforma-monitorizare”.
+
 Pentru testare locală, infrastructura AWS este simulată cu ajutorul **LocalStack Pro**.
 
 ---
