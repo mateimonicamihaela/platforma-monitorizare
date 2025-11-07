@@ -778,19 +778,19 @@ Verifică sintaxa scriptului Bash, construiește imaginea Docker, o publică în
    ```bash
    bash -n scripts/monitoring.sh
   ```
-  Dacă există erori, buildul se oprește.
+Dacă există erori, buildul se oprește.
 
 3. **Construire imagine Docker:**
   ```bash
    docker build -t mateimonicamihaela/monitoring:latest -f docker/monitoring/Dockerfile .
    ```
 4. **Publicare imagine Docker:**
-   - Autentificare cu docker login
-   - Publicare imagine:
+ - Autentificare cu docker login
+ - Publicare imagine:
   ```bash
   docker push mateimonicamihaela/monitoring:latest
   ```
-    - Logout după încărcare
+ - Logout după încărcare
 
 5. **Deploy pe server (prin Ansible):**
     - Setează locale UTF-8 pentru Ansible
@@ -829,7 +829,184 @@ docker ps
 
 ![Pipeline Monitoring Blue Ocean](imagini/pipeline-monitoring-blueocean.png)
 
-Continua 
+
+### 🚀 1.2 Pipeline: Backup
+
+**Scop:**  
+Construiește și publică imaginea Docker pentru containerul backup (scriptul Python) și rulează deploy automat.
+
+**Locație Jenkinsfile:**  
+`jenkins/pipelines/backup/Jenkinsfile`
+
+**Etapele pipeline-ului:**
+1. **Checkout:**  
+   Obține codul din GitHub (branch `main`).
+
+2. **Verificare Python (opțional):**
+   ```bash
+    python3 -m pip install --user ruff pytest
+    ~/.local/bin/ruff scripts/backup.py
+    pytest
+   ```
+
+3. **Construire imagine Docker:**
+  ```bash
+   docker build -t mateimonicamihaela/backup:latest -f docker/backup/Dockerfile .
+   ```
+   
+4. **Publicare imagine Docker:**
+
+   - Autentificare cu docker login
+   - Publicare imagine:
+
+  ```bash
+  docker push mateimonicamihaela/backup:latest
+  ```
+    - Logout după încărcare
+
+5. **Deploy pe server (prin Ansible):**
+    - Rulează același playbook Ansible ca și pipeline-ul de monitoring.
+  ```bash
+  ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
+  ```
+
+Rezultat așteptat:
+
+La finalul rulării:
+
+```bash
+docker ps
+# backup-service       mateimonicamihaela/backup:latest       Up ...
+# monitoring-service   mateimonicamihaela/monitoring:latest   Up ...
+```
+
+### Imagine Pipeline Backup - Stage
+
+![Pipeline Backup Stage](imagini/pipeline-backup-stage.png)
+
+### Imagine Pipeline Backup - Blue Ocean
+
+![Pipeline Backup Stage](pipeline-backup-blueocean.png)
+
+2️⃣ Automatizări și configurări Jenkins
+🔐 2.1 Crearea unui utilizator dedicat proiectului
+
+Obiectiv:
+Crearea unui user non-admin cu acces doar la joburile proiectului.
+
+Pași:
+
+1. **Instalează pluginul Role-based Authorization Strategy**
+(Manage Jenkins → Plugins → Available → căutare „Role-based Authorization Strategy” → Install & Restart Jenkins)
+
+2. **Activează strategia:**
+Manage Jenkins → Global Security → Authorization → Role-Based Strategy
+
+3. **Creează userul:**
+Manage Jenkins → Users → Create User → “monitoring-ci"
+
+4. **Configurează roluri:**
+    - Global role: viewer → Overall/Read, View/Read
+    - Project role: platforma-dev cu pattern ^pipeline-(monitoring|backup)$
+    - → permisiuni Job/Read, Job/Build, Job/Discover
+
+5. **Atribuie rolul userului:**
+Manage and Assign Roles → Assign Roles → proj-user → platforma-dev
+
+🧭 Sfat: creează un folder Platforma-Monitorizare și definește rolul pe regex ^Platforma-Monitorizare/.*$ pentru o organizare mai curată.
+
+👁️ 2.2 Crearea unui View dedicat proiectului
+
+1. **Dashboard → + New View**
+2. **Nume: Platforma Monitorizare**
+3. **Tip: List View**
+4. **Adaugă joburile:**
+    - pipeline-monitoring
+    - pipeline-backup
+
+5. **Adaugă coloane: Status, Weather, Last Success, Last Failure, Last Duration**
+6. **Save**
+
+3️⃣ Integrarea cu Ansible
+
+Playbook: ansible/playbooks/deploy_platform.yml
+Colecții: ansible/requirements.yml
+Inventar: ansible/inventory.ini
+
+Pipeline-ul monitoring rulează:
+
+```bash
+ansible-galaxy collection install -r ansible/requirements.yml -f
+ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
+```
+
+Ce face playbook-ul:
+- Validează docker-compose.yml
+- Oprește containerele vechi (down)
+- Pornește containerele actualizate (up)
+- Verifică fișierele de backup generate
+- Afișează container-ele active (docker ps)
+
+4️⃣ Cerințe CI/CD suplimentare îndeplinite
+
+✅ Utilizator dedicat cu roluri limitate
+✅ View separat pentru proiect
+✅ Build manual sau automat prin webhook GitHub
+✅ Artefacte publicate în Docker Hub
+✅ Credențiale stocate securizat în Jenkins Credentials
+✅ Ansible integrat pentru deploy automat
+
+5️⃣ (Opțional) Punctul E – Minikube
+
+Scop: rularea aplicației în Kubernetes local.
+
+Prerechizite:
+
+```bash
+docker --version
+minikube start
+kubectl version --client
+```
+
+Comenzi:
+
+```bash
+minikube addons enable metrics-server
+minikube image load mateimonicamihaela/monitoring:latest
+minikube image load mateimonicamihaela/backup:latest
+
+kubectl apply -f k8s/namespace.yaml
+kubectl -n monitoring apply -f k8s/nginx-config.yaml
+kubectl -n monitoring apply -f k8s/deployment.yaml
+kubectl -n monitoring apply -f k8s/hpa.yaml
+
+kubectl -n monitoring get deploy,svc,hpa,pods
+```
+
+Acces aplicație:
+
+```bash
+minikube -n monitoring service platforma-monitorizare --url
+```
+
+6️⃣ Troubleshooting
+
+| Problemă                             | Soluție                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| ❌ Docker denied                      | Adaugă `jenkins` în grupul `docker` și repornește Jenkins                       |
+| ❌ GitHub SSH host key                | *Git plugin* → Accept first connection                                          |
+| ❌ Locale error (ISO8859-1)           | Adaugă în pipeline: `export LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONIOENCODING=UTF-8` |
+| ❌ Ansible incompatibilitate versiune | Folosește `ansible-core 2.16.*` și `community.docker 3.10.3`                    |
+| ❌ SSH eșuat către VM                 | Verifică `authorized_keys` și `ansible_ssh_private_key_file`                    |
+
+✨ Rezultat final:
+După rularea pipeline-ului cu succes, Jenkins afișează Finished: SUCCESS și pe VM sunt pornite containerele:
+
+```bash
+backup-service       mateimonicamihaela/backup:latest
+monitoring-service   mateimonicamihaela/monitoring:latest
+```
+
 
 ## 🏗️ Terraform și AWS - Infrastructura Terraform pentru platforma-monitorizare (cu LocalStack Pro)
 
