@@ -1,11 +1,8 @@
 # Platforma de Monitorizare a Starii unui Sistem
 
 ## Scopul Proiectului
-- [Descriere detaliata a scopului proiectului. ]
 
-Acest proiect reprezintă o platformă completă de monitorizare și automatizare DevOps, dezvoltată pentru a demonstra un flux de integrare continuă (CI/CD) și administrare a infrastructurii containerizate.
-
-Aplicația urmărește starea sistemului (sau a unui container), colectând periodic informații despre:
+Acest proiect reprezintă o platformă completă de monitorizare și automatizare DevOps, dezvoltată pentru a demonstra un flux de integrare continuă (CI/CD) și administrare a infrastructurii containerizate. Aplicația urmărește starea sistemului (sau a unui container), colectând periodic informații despre:
 - utilizarea procesorului (CPU),
 - memoria disponibilă,
 - numărul de procese active,
@@ -21,12 +18,12 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 
 1. Cele 2 scripturi
 
-📜 Scriptul de monitorizare (monitoring.sh)
+  📜 Scriptul de monitorizare (monitoring.sh)
 - Rulează periodic și scrie în fișierul system-state.log informații despre starea sistemului.
 - Intervalul este configurabil prin variabila de mediu INTERVAL (implicit 5 secunde).
 - Poate fi executat atât local, cât și în container Docker.
 
-💾 Scriptul de backup (backup.py)
+  💾 Scriptul de backup (backup.py)
 - Monitorizează fișierul system-state.log și efectuează backup automat dacă detectează modificări.
 - Copiile sunt salvate în directorul /data/backup/ și denumite după data și ora curentă.
 - Include un mecanism de rotație automată (șterge backup-urile vechi, păstrând ultimele N fișiere).
@@ -122,15 +119,34 @@ Acest subpunct este BONUS.
 Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
 
 ## Structura Proiectului
-[Aici descriem rolul fiecarui director al proiectului. Descrierea trebuie sa fie foarte pe scurt la acest pas. O sa intrati in detalii la pasii urmatori.]
+
 - `/scripts`: 
-    - `monitoring.sh`: Un script shell care scrie intr-un fisier, la un interval de timp, informatii despre sistem (CPU, memorie, uptime, procese active, utilizare disk, retea).
-    - `backup.py`: Un script Python care face backup la fișierul de log, dacă acesta s-a modificat.
-.
-- `/docker`: [Descriere Dockerfiles și docker-compose.yml. Aici descrieti legatura dintre fiecare Dockerfile si scripturile de mai sus (vedeti comentariul din fiecare Dockerfile)]
-- `/ansible`: [Descriere rolurilor playbook-urilor și inventory]
-- `/jenkins`: [Descrierea rolului acestui director si a subdirectoarelor. Unde sunt folosite fisierele din acest subdirector.]
-- `/terraform`: [Descriere rol fiecare fisier Terraform folosit]
+    - `monitoring.sh`: script shell care colectează date despre sistem (CPU, memorie, uptime, procese, disk).
+    - `backup.py`: script Python care face backup la fișierul de log dacă acesta s-a modificat
+
+- `/docker`: 
+    - `monitoring/Dockerfile`: imagine Docker pentru scriptul de monitorizare
+    - `backup/Dockerfile`: imagine Docker pentru scriptul de backup.
+    - `compose.yaml`: pornește ambele containere și le conectează prin volume comune.
+
+- `/k8s`:
+    - `deployment.yaml`: definește un pod cu 3 containere (monitor, backup, nginx).
+    - `hpa.yaml`: autoscaler pe baza CPU și memorie.
+    - `namespace.yaml`: aplicatia trebuie sa ruleze intr-un namespace cu numele monitoring
+    - `nginx-config.yaml`: 
+
+- `/ansible`:
+    - `install_docker.yml`: instalează Docker pe o mașină virtuală.
+    - `deploy_platform.yml`: rulează aplicația folosind docker-compose.yaml.
+    - `inventory.ini`: definește VM-urile țintă
+
+- `/jenkins/pipelines`:
+    - `monitoring/Jenkinsfile`: pipeline CI/CD pentru scriptul shell.
+    - `backup/Jenkinsfile`: pipeline CI/CD pentru scriptul Python.
+
+- `/terraform`:
+    - `main.tf`: creează infrastructura AWS (EC2, S3, SSH key-pair).
+    - `backend.tf`: salvează state-ul Terraform în S3.
 
 ## Setup și Rulare
 - [Instrucțiuni de setup local și remote. Aici trebuiesc puse absolut toate informatiile necesare pentru a putea instala si rula proiectul. De exemplu listati aici si ce tool-uri trebuiesc instalate (Ansible, SSH config, useri, masini virtuale noi daca este cazul, etc) pasii de instal si comenzi].
@@ -711,6 +727,223 @@ Host: VM-ul pe care rulezi (poți specifica în Jenkinsfile ca variabilă)
 - [Instrucțiuni pentru rularea Terraform și configurarea AWS]
 - [Daca o sa folositi pentru testare localstack in loc de AWS real puneti aici toti pasii pentru install localstack.]
 - [Adaugati instructiunile pentru ca verifica faptul ca Terraform a creat corect infrastructura]
+## 🏗️ Infrastructura Terraform pentru platforma-monitorizare (cu LocalStack Pro)
+
+Acest proiect folosește **Terraform** pentru a defini și gestiona infrastructura necesară rularii aplicației „platforma-monitorizare”.
+Pentru testare locală, infrastructura AWS este simulată cu ajutorul **LocalStack Pro**.
+
+---
+
+## 🔧 [Prerechizite]
+
+Înainte de a rula Terraform, trebuie instalate următoarele componente:
+
+| Componentă        | Versiune recomandată | Rol                                                       |
+| ----------------- | -------------------- | --------------------------------------------------------- |
+| **Terraform**     | ≥ 1.5.0              | Orchestrare IaC (Infrastructure as Code)                  |
+| **AWS CLI**       | ≥ 2.13               | Interacțiune manuală cu serviciile AWS / LocalStack       |
+| **LocalStack**    | ≥ 4.10 (Pro)         | Simulează serviciile AWS local (EC2, S3, IAM, etc.)       |
+| **Docker**        | ≥ 20.x               | Necesitat de LocalStack pentru rulare                     |
+
+
+
+---
+
+## ⚙️ [Instrucțiuni pentru instalarea și configurarea LocalStack]
+
+### 1️⃣ Instalează LocalStack CLI
+
+```bash
+pip install localstack
+```
+
+### 2️⃣ Pornește serviciul LocalStack
+
+```bash
+localstack start -d
+```
+
+Verifică dacă rulează corect:
+
+```bash
+localstack status services
+```
+
+Rezultatul trebuie să arate:
+
+```
+ec2 ✔ running
+s3 ✔ running
+iam ✔ available
+```
+
+### 3️⃣ (Opțional) Instalează `awslocal`
+
+`awslocal` este un utilitar care redirecționează comenzi AWS CLI către LocalStack.
+
+```bash
+pip install awscli-local
+```
+
+Verificare:
+
+```bash
+awslocal s3 ls
+```
+
+👉 Dacă nu dă eroare, e configurat corect.
+
+---
+
+## 🌐 [Configurarea mediului pentru Terraform]
+
+Setează variabilele de mediu necesare:
+
+```bash
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_DEFAULT_REGION=eu-central-1
+```
+
+Aceste valori sunt doar simbolice (LocalStack nu validează autentificarea reală).
+
+---
+
+## 🧱 [Instrucțiuni pentru rularea Terraform]
+
+### 1️⃣ Creează bucketul S3 pentru stocarea state-ului
+
+În LocalStack, trebuie să existe bucketul de backend înainte de inițializare:
+
+```bash
+awslocal s3 mb s3://tf-state-platforma-monitorizare
+```
+
+### 2️⃣ Inițializează Terraform
+
+```bash
+cd terraform
+terraform init
+```
+
+Dacă primești o eroare că bucket-ul nu există, rulează comanda de mai sus și apoi repetă `terraform init`.
+
+### 3️⃣ Vizualizează planul infrastructurii
+
+```bash
+terraform plan
+```
+
+Aici ar trebui să vezi:
+
+* un bucket S3 (`platforma-monitorizare-artifacts`)
+* o pereche de chei SSH (`monitor-key`)
+* un security group (`sg-monitoring`)
+* o instanță EC2 (`vm-monitoring`)
+
+### 4️⃣ Creează infrastructura
+
+```bash
+terraform apply -auto-approve
+```
+
+---
+
+## 🧪 [Verificarea infrastructurii create în LocalStack]
+
+După `terraform apply`, putem valida că toate resursele există în LocalStack folosind `awslocal`:
+
+### ✅ 1. Verifică bucket-urile S3:
+
+```bash
+awslocal s3 ls
+```
+
+Output așteptat:
+
+```
+2025-11-06 14:22:10 platforma-monitorizare-artifacts
+2025-11-06 14:22:09 tf-state-platforma-monitorizare
+```
+
+### ✅ 2. Verifică instanțele EC2 simulate:
+
+```bash
+awslocal ec2 describe-instances | jq '.Reservations[].Instances[] | {InstanceId, Tags, State}'
+```
+
+Output așteptat:
+
+```json
+{
+  "InstanceId": "i-1234567890abcdef0",
+  "State": { "Name": "running" },
+  "Tags": [
+    { "Key": "Name", "Value": "vm-monitoring" },
+    { "Key": "proiect", "Value": "platforma-monitorizare" }
+  ]
+}
+```
+
+### ✅ 3. Verifică key pair-ul creat:
+
+```bash
+awslocal ec2 describe-key-pairs
+```
+
+Output așteptat:
+
+```
+{
+  "KeyPairs": [
+    {
+      "KeyName": "monitor-key",
+      "KeyType": "rsa",
+      "KeyFingerprint": "1a:2b:3c:4d:..."
+    }
+  ]
+}
+```
+
+### ✅ 4. Verifică security group-ul:
+
+```bash
+awslocal ec2 describe-security-groups
+```
+
+---
+
+## 🧹 [Curățarea infrastructurii]
+
+După testare, rulează:
+
+```bash
+terraform destroy -auto-approve
+```
+
+Poți confirma distrugerea prin:
+
+```bash
+awslocal ec2 describe-instances
+awslocal s3 ls
+```
+
+— resursele nu ar trebui să mai apară.
+
+---
+
+## 🧾 [Concluzie]
+
+Prin rularea acestui Terraform cu LocalStack Pro:
+
+* am simulat complet crearea infrastructurii AWS local (fără costuri);
+* am validat că toate resursele (EC2, S3, key pair, security group) sunt create corect;
+* am salvat `terraform.tfstate` în bucket-ul S3 definit, imitând comportamentul din AWS real.
+
+Acest setup permite testarea și validarea infrastructurii „platforma-monitorizare” fără acces la cont AWS, fiind complet local și reproductibil.
+
+
+  Pentru rulare 
 
 ## Depanare si investigarea erorilor
 - [Descrieti cum putem accesa logurile aplicatiei si cum ne logam pe fiecare container pentru eventualele depanari de probleme]

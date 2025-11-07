@@ -1,0 +1,66 @@
+# ============================================================
+# GITIGNORE - Platforma Monitorizare
+# ============================================================
+
+# === 1. Fisiere de runtime / backup (generate de scripturi) ===
+data/system-state.log
+data/backup/
+*.log
+*.tmp
+
+# === 2. Terraform ===
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+terraform.tfvars
+!**/.terraform.lock.hcl
+
+# === 3. Jenkins ===
+jenkins_home/
+workspace/
+logs/
+*.log
+*.pid
+
+# === 4. Docker ===
+*.tar
+*.bak
+docker-compose.override.yml
+.dockerignore
+
+# === 5. Ansible ===
+*.retry
+ansible/.ansible/
+ansible/tmp/
+inventory.ini~
+ansible/collections/
+*.vault
+
+# === 6. Python / sistem ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.bak
+*.tmp
+.env
+venv/
+.venv/
+
+# === 7. Editor / IDE ===
+.vscode/
+.idea/
+*.code-workspace
+
+# === 8. OS files ===
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# END .gitignore
+# ============================================================
