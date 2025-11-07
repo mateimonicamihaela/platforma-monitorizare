@@ -778,30 +778,30 @@ Verifică sintaxa scriptului Bash, construiește imaginea Docker, o publică în
    ```bash
    bash -n scripts/monitoring.sh
   ```
-    Dacă există erori, buildul se oprește.
+  Dacă există erori, buildul se oprește.
 
 3. **Construire imagine Docker:**
   ```bash
    docker build -t mateimonicamihaela/monitoring:latest -f docker/monitoring/Dockerfile .
    ```
 4. **Publicare imagine Docker:**
-  - Autentificare cu docker login
-  - Publicare imagine:
+   - Autentificare cu docker login
+   - Publicare imagine:
   ```bash
   docker push mateimonicamihaela/monitoring:latest
   ```
-  - Logout după încărcare
+    - Logout după încărcare
 
 5. **Deploy pe server (prin Ansible):**
-  - Setează locale UTF-8 pentru Ansible
-  - Rulează upgrade pip și instalează ansible==9.*
-  - Instalează colecțiile din ansible/requirements.yml
-  - Rulează playbookul:
+    - Setează locale UTF-8 pentru Ansible
+    - Rulează upgrade pip și instalează ansible==9.*
+    - Instalează colecțiile din ansible/requirements.yml
+    - Rulează playbookul:
   ```bash
   ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
   ```
 
-    Exemplu inventar:
+Exemplu inventar:
     ```bash
     [monitoring_vm]     
     vm1 ansible_host=192.168.100.240 ansible_user=monitor ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/id_rsa
@@ -810,17 +810,18 @@ Verifică sintaxa scriptului Bash, construiește imaginea Docker, o publică în
     ansible_python_interpreter=/usr/bin/python3
     ```
 
-    Rezultat așteptat:
+Rezultat așteptat:
       La finalul rulării:
     ```bash
     docker ps
     # backup-service       mateimonicamihaela/backup:latest       Up ...
     # monitoring-service   mateimonicamihaela/monitoring:latest   Up ...
     ```
-    Imagini Pipeline Monitoring - Stage & Blue Ocean
 
-    ![Pipeline Monitoring Stage](imagini/pipeline-monitoring-stage.png)
-    ![Pipeline Monitoring Blue Ocean](imagini/pipeline-monitoring-blueocean.png)
+Imagini Pipeline Monitoring - Stage & Blue Ocean
+
+![Pipeline Monitoring Stage](imagini/pipeline-monitoring-stage.png)
+![Pipeline Monitoring Blue Ocean](imagini/pipeline-monitoring-blueocean.png)
 
 Continua 
 
