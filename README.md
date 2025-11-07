@@ -74,14 +74,26 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 - ☁️ Infrastructură definită ca cod (IaC) prin Terraform.
 
 ```bash
+.
 ├── ansible
+│   ├── ansible.cfg
 │   ├── inventory.ini
-│   └── playbooks
-│       ├── deploy_platform.yml
-│       └── install_docker.yml
+│   ├── playbooks
+│   │   ├── deploy_platform.yml
+│   │   └── install_docker.yml
+│   └── requirements.yml
 ├── data
 │   ├── backup
-│   │   └── system-state-20251027-124842.log
+│   │   ├── system-state-20251107-161149.log
+│   │   ├── system-state-20251107-161154.log
+│   │   ├── system-state-20251107-161159.log
+│   │   ├── system-state-20251107-161204.log
+│   │   ├── system-state-20251107-161209.log
+│   │   ├── system-state-20251107-161215.log
+│   │   ├── system-state-20251107-161221.log
+│   │   ├── system-state-20251107-161227.log
+│   │   ├── system-state-20251107-161232.log
+│   │   └── system-state-20251107-161237.log
 │   └── system-state.log
 ├── docker
 │   ├── backup
@@ -99,14 +111,21 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 │           └── Jenkinsfile
 ├── k8s
 │   ├── deployment.yaml
-│   └── hpa.yaml
+│   ├── hpa.yaml
+│   ├── namespace.yaml
+│   └── nginx-config.yaml
 ├── README.md
 ├── scripts
 │   ├── backup.py
 │   └── monitoring.sh
 └── terraform
     ├── backend.tf
-    └── main.tf
+    ├── locals.tf
+    ├── main.tf
+    ├── outputs.tf
+    ├── providers.tf
+    ├── variables.tf
+    └── versions.tf
 ```
 
 Acest subpunct este BONUS.
@@ -121,28 +140,36 @@ Consultati si [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
 ## Structura Proiectului
 
 - `/scripts`: 
-    - `monitoring.sh`: script shell care colectează date despre sistem (CPU, memorie, uptime, procese, disk).
-    - `backup.py`: script Python care face backup la fișierul de log dacă acesta s-a modificat
+    - `monitoring.sh`: script Bash care monitorizează resursele sistemului (CPU, RAM, spațiu pe disc, procese active, uptime). Scrie periodic informațiile în fișierul data/system-state.log.
+    - `backup.py`: script Python care verifică dacă fișierul de log al sistemului (system-state.log) s-a modificat și, dacă da, face un backup în data/backup/ cu timestamp unic.
 
 - `/docker`: 
-    - `monitoring/Dockerfile`: imagine Docker pentru scriptul de monitorizare
-    - `backup/Dockerfile`: imagine Docker pentru scriptul de backup.
-    - `compose.yaml`: pornește ambele containere și le conectează prin volume comune.
+    - `monitoring/Dockerfile`: definește imaginea Docker pentru containerul de monitorizare; copiază scriptul monitoring.sh și îl rulează periodic.
+    - `backup/Dockerfile`: definește imaginea Docker pentru containerul de backup; copiază scriptul backup.py și îl rulează automat pentru a salva copii ale logului.
+    - `docker-compose.yaml`: lansează ambele servicii (monitoring și backup) în containere separate, conectate printr-un volum partajat pentru fișierele de log și backup.
 
 - `/k8s`:
-    - `deployment.yaml`: definește un pod cu 3 containere (monitor, backup, nginx).
-    - `hpa.yaml`: autoscaler pe baza CPU și memorie.
-    - `namespace.yaml`: aplicatia trebuie sa ruleze intr-un namespace cu numele monitoring
-    - `nginx-config.yaml`: 
+    - `deployment.yaml`: definește un Deployment Kubernetes care rulează cele 3 containere (monitoring, backup și nginx) într-un singur Pod.
+    - `hpa.yaml`: configurare de Horizontal Pod Autoscaler bazat pe consumul de CPU și memorie, pentru scalarea automată a aplicației.
+    - `namespace.yaml`: definește un namespace Kubernetes numit monitoring, în care vor fi create toate resursele aplicației.
+    - `nginx-config.yaml`: conține configurarea Nginx (reverse proxy / server web) pentru a expune datele de monitorizare către exterior, cu eventuale rute sau cache-uri specifice aplicației.
 
 - `/ansible`:
-    - `install_docker.yml`: instalează Docker pe o mașină virtuală.
-    - `deploy_platform.yml`: rulează aplicația folosind docker-compose.yaml.
+    - `install_docker.yml`: configurarea principală a Ansible (căi, timeout, inventory implicit).
+    - `deploy_platform.yml`: definește mașinile-țintă (de exemplu VM-ul vm1 de pe IP 192.168.100.240) și utilizatorii (monitor, jenkins).
     - `inventory.ini`: definește VM-urile țintă
+    - `requirements.yml`: listează colecțiile Ansible necesare (ex: community.docker pentru gestiunea containerelor).
+    - `playbooks/install_docker.yml`: playbook care instalează Docker Engine și dependințele pe mașina remote, pregătind mediul de execuție.
+    - `playbooks/deploy_platform.yml`: playbook care clonează repository-ul, copiază fișierele docker-compose.yml și rulează containerele aplicației folosind docker compose up -d.
+
 
 - `/jenkins/pipelines`:
-    - `monitoring/Jenkinsfile`: pipeline CI/CD pentru scriptul shell.
-    - `backup/Jenkinsfile`: pipeline CI/CD pentru scriptul Python.
+    - `monitoring/Jenkinsfile`: definește pipeline-ul CI/CD pentru containerul de monitorizare:
+        - verifică sintaxa Bash (bash -n)
+        - construiește imaginea Docker
+        - o publică în Docker Hub
+        - rulează deploy automat pe VM prin Ansible.
+    - `backup/Jenkinsfile`: definește pipeline-ul CI/CD pentru containerul de backup (scriptul Python): build → push → deploy.
 
 - `/terraform`:
     - `main.tf`: creează infrastructura AWS (EC2, S3, SSH key-pair).
