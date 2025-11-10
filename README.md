@@ -761,7 +761,7 @@ Creează în Jenkins → Manage Jenkins → Credentials, un Secret Text sau User
 
 
 
-## 1️⃣ Pipeline-uri Jenkins (detaliat)
+### 1️⃣ Pipeline-uri Jenkins (detaliat)
 
 Pipeline-uri (joburi) din Jenkinsfile-urile din repo
 
@@ -951,7 +951,7 @@ docker ps
 
 
 
-2️⃣ Automatizări și configurări Jenkins
+### 2️⃣ Automatizări și configurări Jenkins
 
 🔐 2.1 Crearea unui utilizator dedicat proiectului
 
@@ -1074,7 +1074,7 @@ Apasă Save.
 6. **Save**
 
 
-3️⃣ Integrarea cu Ansible
+### 3️⃣ Integrarea cu Ansible
 
 Playbook: ansible/playbooks/deploy_platform.yml
 Colecții: ansible/requirements.yml
@@ -1096,7 +1096,7 @@ Ce face playbook-ul:
 
 
 
-4️⃣ Cerințe CI/CD suplimentare îndeplinite
+### 4️⃣ Cerințe CI/CD suplimentare îndeplinite
 
   ✅ Utilizator dedicat cu roluri limitate
 
@@ -1112,7 +1112,7 @@ Ce face playbook-ul:
 
 
 
-5️⃣ (Opțional) Punctul E – Minikube
+### 5️⃣ (Opțional) Punctul E – Minikube
 
 Scop: rularea aplicației în Kubernetes local.
 
@@ -1145,7 +1145,7 @@ Acces aplicație:
 minikube -n monitoring service platforma-monitorizare --url
 ```
 
-6️⃣ Troubleshooting
+### 6️⃣ Troubleshooting
 
 | Problemă                             | Soluție                                                                         |
 | ------------------------------------ | ------------------------------------------------------------------------------- |
