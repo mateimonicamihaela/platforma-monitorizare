@@ -11,12 +11,6 @@ Creați 2 scripturi:
 
 #!/usr/bin/env python3
 
-
-import os, sys, time, shutil, signal
-from datetime import datetime
-#!/usr/bin/env python3
-
-
 import os, sys, time, shutil, signal
 from datetime import datetime
 
@@ -145,13 +139,3 @@ if __name__ == "__main__":
         log("ERROR", f"Excepție neprevăzută: {e}")
         sys.exit(0)
 
-
-
-
-# In alt terminal:
-# BACKUP_INTERVAL=5
-# SRC_FILE=./system-state.log
-# BACKUP_DIR=./backup
-
-# Rulare
-# python3 backup.py
