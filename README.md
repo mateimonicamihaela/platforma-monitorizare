@@ -227,11 +227,11 @@ Aplicația poate rula atât individual, cât și împreună, folosind servicii D
 
 3 secțiuni pentru Docker:
 
-1️⃣ Build manual al imaginilor Docker
+  - 1️⃣ Build manual al imaginilor Docker
 
-2️⃣ Rulare individuală cu docker run
+  - 2️⃣ Rulare individuală cu docker run
 
-3️⃣ Rulare orchestrată cu docker compose
+  - 3️⃣ Rulare orchestrată cu docker compose
 
 
 🐳 Rulare cu Docker (fără Docker Compose)
@@ -380,7 +380,7 @@ docker push mateimonicamihaela/backup:latest
 
 ## Setup și Rulare in Kubernetes
 
-1. Preecondiții (Porneste Minikube + Activează metrics-server (pentru HPA))
+1. Precondiții (Porneste Minikube + Activează metrics-server (pentru HPA))
 ```bash
 cd ~/work/platforma-monitorizare
 minikube start
@@ -811,7 +811,7 @@ Vom crea 2 Pipeline jobs (tip Pipeline → “Pipeline script from SCM”).
 > - `pipeline-monitoring` – CI/CD pentru containerul *monitoring* (script Bash)
 > - `pipeline-backup` – CI/CD pentru containerul *backup* (script Python)
 
----
+
 
 ### 🚀 1.1 Pipeline: Monitoring
 
@@ -839,12 +839,15 @@ Verifică sintaxa scriptului Bash, construiește imaginea Docker, o publică în
    ```bash
    bash -n scripts/monitoring.sh
   ```
+
 Dacă există erori, buildul se oprește.
 
 3. **Construire imagine Docker:**
+
   ```bash
    docker build -t mateimonicamihaela/monitoring:latest -f docker/monitoring/Dockerfile .
    ```
+
 4. **Publicare imagine Docker:**
  - Autentificare cu docker login
  - Publicare imagine:
@@ -858,19 +861,20 @@ Dacă există erori, buildul se oprește.
     - Rulează upgrade pip și instalează ansible==9.*
     - Instalează colecțiile din ansible/requirements.yml
     - Rulează playbookul:
+
   ```bash
   ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
   ```
 
 Exemplu inventar:
 
-    ```bash
-    [monitoring_vm]     
-    vm1 ansible_host=192.168.100.240 ansible_user=monitor ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/id_rsa
+```bash
+[monitoring_vm]     
+vm1 ansible_host=192.168.100.240 ansible_user=monitor ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/id_rsa
 
-    [all:vars]
-    ansible_python_interpreter=/usr/bin/python3
-    ```
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+```
 
 Rezultat așteptat:
 
@@ -961,10 +965,13 @@ Crearea unui user non-admin cu acces doar la joburile proiectului.
 Pași:
 
 1. **Instalează pluginul Role-based Authorization Strategy**
-(Manage Jenkins → Plugins → Available → căutare „Role-based Authorization Strategy” → Install & Restart Jenkins)
+
+Manage Jenkins → Plugins → Available → căutare „Role-based Authorization Strategy” → Install & Restart Jenkins
 
 2. **Activează strategia de autorizare pe baza de roluri:**
+
 Manage Jenkins → Global Security → Authorization → Role-Based Strategy
+
 🔁 Jenkins va reîncărca interfața și acum vei avea un meniu nou:
 
 ```bash
@@ -974,12 +981,14 @@ Manage Jenkins → Manage and Assign Roles
 3. **Creează userul:**
 
 Manage Jenkins → Users → Create User → “monitoring-ci"
+
 Completează:
 
   - Username: monitoring-ci
   - Password: (alege o parolă simplă)
   - Full name: „Monitorizare CI/CD”
   - Email: (opțional)
+  
 Apasă Create User
 
 4. **Configurează roluri:**
