@@ -18,12 +18,12 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 
 1. Cele 2 scripturi:
 
-  💾 Scriptul de monitorizare (monitoring.sh)
+💾 Scriptul de monitorizare (monitoring.sh)
 - Rulează periodic și scrie în fișierul system-state.log informații despre starea sistemului.
 - Intervalul este configurabil prin variabila de mediu INTERVAL (implicit 5 secunde).
 - Poate fi executat atât local, cât și în container Docker.
 
-  💾 Scriptul de backup (backup.py)
+💾 Scriptul de backup (backup.py)
 - Monitorizează fișierul system-state.log și efectuează backup automat dacă detectează modificări.
 - Copiile sunt salvate în directorul /data/backup/ și denumite după data și ora curentă.
 - Include un mecanism de rotație automată (șterge backup-urile vechi, păstrând ultimele N fișiere).
@@ -484,11 +484,11 @@ curl http://192.168.49.2:32055/logs/backup/
 
 | Container        | Rol                                                                                         | Porturi expuse         | Persistență                         |
 | ---------------- | ------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------- |
-| 🖥️ `monitoring` | rulează `monitoring.sh` – colectează starea sistemului și scrie în `/data/system-state.log` | ❌ nu expune porturi    | ✅ scrie în `/data/system-state.log` |
+| 🖥️  `monitoring` | rulează `monitoring.sh` – colectează starea sistemului și scrie în `/data/system-state.log` | ❌ nu expune porturi    | ✅ scrie în `/data/system-state.log` |
 | 🧱 `backup`      | rulează `backup.py` – monitorizează fișierul de log și face copii în `/data/backup/`        | ❌ nu expune porturi    | ✅ salvează în `/data/backup/`       |
 | 🌐 `nginx`       | servește prin HTTP conținutul din `/data/` (loguri + backup-uri)                            | ✅ expune portul **80** | ✅ montează `/data` read-only        |
 
-Alternativă completă — „hard reset” (dacă vrem să curețam tot proiectul)
+Alternativă completă — „hard reset” (dacă vrem să curețam tot )
 ```bash
 docker compose down --remove-orphans
 docker container prune -f
@@ -500,8 +500,6 @@ docker compose up -d
 
 
 ## Setup și Rulare in Ansible
-- [Includeti aici pasii detaliati de configurat si rulat Ansible pe masina noua]
-- [Descrieti cum verificam ca totul a rulat cu succes? Cateva comenzi prin care verificam ca Ansible a instalat ce trebuia]
 
 1. Bootstrap VM nou + user nou (o singură dată)
 
@@ -668,7 +666,7 @@ ansible monitoring_vm -m command -a "docker ps"
 ```
 
 
-## Jenkins CI/CD și Automatizari
+## Jenkins - CI/CD și Automatizari
 ![Jenkins Logo](imagini/jenkins-logo.png)
 
 Instalam Jenkins
@@ -715,35 +713,98 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 # Finalizează configurarea în browser
 1. Selectează "Install suggested plugins"
 
-2. Creează utilizatorul: monitoring-ci
+2. Creează utilizatorul: mateimonicamihaela
 
 3. Accesează Dashboard-ul Jenkins 
+
+Pluginuri necesare
+
+În Jenkins → Manage Jenkins → Plugins:
+  - Available (căutare și instalare):
+
+    - Git (git, git client)
+    - Pipeline (workflow-aggregator)
+    - Docker Pipeline și Docker (docker, docker commons)
+    - Credentials Binding
+    - Blue Ocean
+    - Role-based Authorization Strategy
+Reboot Jenkins dupa fiecare plugine instalat.
 ```
 
-Credentale necesare în Jenkins (Manage Jenkins → Credentials)
+### 🧩 Setări Jenkins necesare
 
-```bash
 Creează următoarele:
 
-- Docker Hub (username+password)
+🔹 Credentiale Docker Hub
 
+Creează în Jenkins → Manage Jenkins → Credentials, un Secret Text sau Username + Password Credential cu ID:
   - ID: dockerhub-credentials
   - User: mateimonicamihaela (contul tău Docker Hub)
-  - Pass / token: (token Docker Hub)
+  - Pass / token: parola contului (sau token-ul generat din Docker Hub)
 
-- SSH către VM pentru deploy (private key)
+🔹 User dedicat Jenkins
 
-ID: vm_ssh_key
+În Jenkins, mergi la Manage Jenkins → Security → Users → Create User
+  - Creează utilizatorul:
+    - Username: monitoring-ci
+    - Role: doar acces la platforma-monitorizare
+  - Activează Role-Based Strategy Plugin
+  - Configurează acces doar pentru:
+    - pipeline-urile backup și monitoring
+    - fără drepturi administrative
 
-Username: monitor
+🔹 SSH către VM pentru deploy (private key)
+  - ID: vm_ssh_key
+  - Username: monitor
+  - Private key: (cheia care are acces la VM-ul tău)
+  - Host: VM-ul pe care rulezi (poți specifica în Jenkinsfile ca variabilă)
 
-Private key: (cheia care are acces la VM-ul tău)
-
-Host: VM-ul pe care rulezi (poți specifica în Jenkinsfile ca variabilă)
-```
 
 
 ## 1️⃣ Pipeline-uri Jenkins (detaliat)
+
+Pipeline-uri (joburi) din Jenkinsfile-urile din repo
+
+Vom crea 2 Pipeline jobs (tip Pipeline → “Pipeline script from SCM”).
+
+### A. Monitoring (Bash)
+
+1. New Item → Name: pipeline-monitoring → Pipeline → OK
+
+2. Pipeline → Definition: Pipeline script from SCM
+
+    - SCM: Git
+
+    - Repository URL: https://github.com/mateimonicamihaela/platforma-monitorizare.git
+
+    - Credentials: (idem)
+
+    - Branch: */main
+
+    - Script Path: jenkins/pipelines/monitoring/Jenkinsfile
+
+3. Save → Build Now.
+
+
+### B. Backup (Python)
+
+1. New Item → Name: pipeline-backup → Pipeline → OK
+
+2. Pipeline → Definition: Pipeline script from SCM
+
+    - SCM: Git
+
+    - Repository URL: https://github.com/mateimonicamihaela/platforma-monitorizare.git
+
+    - Credentials: (nimic sau github-token, dacă e privat)
+
+    - Branch Specifier: */main
+
+    - Script Path: jenkins/pipelines/backup/Jenkinsfile
+
+3. Save → Build Now.
+
+
 
 > **Repository:** `platforma-monitorizare`  
 > **Pipeline-uri:**
@@ -888,6 +949,8 @@ docker ps
 
 ![Pipeline Backup Stage](imagini/pipeline-backup-blueocean.png)
 
+
+
 2️⃣ Automatizări și configurări Jenkins
 
 🔐 2.1 Crearea unui utilizator dedicat proiectului
@@ -900,21 +963,103 @@ Pași:
 1. **Instalează pluginul Role-based Authorization Strategy**
 (Manage Jenkins → Plugins → Available → căutare „Role-based Authorization Strategy” → Install & Restart Jenkins)
 
-2. **Activează strategia:**
+2. **Activează strategia de autorizare pe baza de roluri:**
 Manage Jenkins → Global Security → Authorization → Role-Based Strategy
+🔁 Jenkins va reîncărca interfața și acum vei avea un meniu nou:
+
+```bash
+Manage Jenkins → Manage and Assign Roles
+```
 
 3. **Creează userul:**
+
 Manage Jenkins → Users → Create User → “monitoring-ci"
+Completează:
+
+  - Username: monitoring-ci
+  - Password: (alege o parolă simplă)
+  - Full name: „Monitorizare CI/CD”
+  - Email: (opțional)
+Apasă Create User
 
 4. **Configurează roluri:**
-    - Global role: viewer → Overall/Read, View/Read
-    - Project role: platforma-dev cu pattern ^pipeline-(monitoring|backup)$
-    - → permisiuni Job/Read, Job/Build, Job/Discover
+
+Manage Jenkins → Manage and Assign Roles → Manage Roles
+
+Acolo ai trei secțiuni:
+
+Global roles, Project roles, și View roles.
+
+➤ În „Global roles”, adaugă:
+
+| Rol              | Drepturi                                                         |
+| ---------------- | ---------------------------------------------------------------- |
+| `admin`          | bifează tot                                                      |
+| `platforma-user` | bifează doar **Overall → Read**, **Job → Read**, **View → Read** |
+
+Creează un rol pentru proiect
+
+Derulează mai jos, la Project roles.
+
+Adaugă un rol nou:
+
+| Rol                 | Regex (pattern) | Drepturi                                 |
+| ------------------- | --------------- | ---------------------------------------- |
+| `platforma-project` | `^Platforma.*`  | Job → Read, Job → Build, Job → Workspace |
+
+Apasă Save.
+
+🧠 Explicație:
+
+Regex-ul ^Platforma.* înseamnă că se aplică pentru toate joburile ale căror nume încep cu „Platforma” (de exemplu „Platforma Monitorizare”).
+
+Creează un rol pentru view
+
+Derulează jos, la View roles, și adaugă:
+
+| Rol              | Drepturi    |
+| ---------------- | ----------- |
+| `platforma-view` | View → Read |
+
+
 
 5. **Atribuie rolul userului:**
-Manage and Assign Roles → Assign Roles → proj-user → platforma-dev
 
-🧭 Sfat: creează un folder Platforma-Monitorizare și definește rolul pe regex ^Platforma-Monitorizare/.*$ pentru o organizare mai curată.
+Manage Jenkins → Manage and Assign Roles → Assign Roles
+
+🔹 În secțiunea „Global roles”:
+
+Adaugă utilizatorii tăi existenți.
+
+| User                                             | admin | platforma-user |
+| ------------------------------------------------ | ----- | -------------- |
+| mateimonicamihaela                               | ✅     | ⬜              |
+| monitoring-ci (sau cum se numește userul creat nou) | ⬜     | ✅              |
+
+🔹 În secțiunea „Project roles”:
+
+| User          | platforma-project  |
+| ------------- | ----------------|
+| monitoring-ci | ✅              |
+
+🔹 În secțiunea „View roles”:
+
+| User       | platforma-view |
+| ---------- | -------------- |
+| monitor-ci | ✅              |
+
+Apasă Save.
+
+🔹 Testează accesul
+
+1. Deconectează-te din Jenkins.
+
+2. Autentifică-te cu userul nou (monitor-ci).
+
+3. Verifică:
+    - Poate vedea doar view-ul Platforma Monitorizare.
+    - Poate rula joburile de pipeline, dar nu poate edita setările Jenkins.
+
 
 👁️ 2.2 Crearea unui View dedicat proiectului
 
@@ -927,6 +1072,7 @@ Manage and Assign Roles → Assign Roles → proj-user → platforma-dev
 
 5. **Adaugă coloane: Status, Weather, Last Success, Last Failure, Last Duration**
 6. **Save**
+
 
 3️⃣ Integrarea cu Ansible
 
@@ -948,19 +1094,21 @@ Ce face playbook-ul:
 - Verifică fișierele de backup generate
 - Afișează container-ele active (docker ps)
 
+
+
 4️⃣ Cerințe CI/CD suplimentare îndeplinite
 
-✅ Utilizator dedicat cu roluri limitate
+  ✅ Utilizator dedicat cu roluri limitate
 
-✅ View separat pentru proiect
+  ✅ View separat pentru proiect
 
-✅ Build manual sau automat prin webhook GitHub
+  ✅ Build manual sau automat prin webhook GitHub
 
-✅ Artefacte publicate în Docker Hub
+  ✅ Artefacte publicate în Docker Hub
 
-✅ Credențiale stocate securizat în Jenkins Credentials
+  ✅ Credențiale stocate securizat în Jenkins Credentials
 
-✅ Ansible integrat pentru deploy automat
+  ✅ Ansible integrat pentru deploy automat
 
 
 
@@ -1125,7 +1273,7 @@ Dacă primești o eroare că bucket-ul nu există, rulează comanda de mai sus �
 terraform plan
 ```
 
-Aici ar trebui să vezi:
+Aici ar trebui să vedem:
 
 * un bucket S3 (`platforma-monitorizare-artifacts`)
 * o pereche de chei SSH (`monitor-key`)
@@ -1234,15 +1382,26 @@ Prin rularea acestui Terraform cu LocalStack Pro:
 Acest setup permite testarea și validarea infrastructurii „platforma-monitorizare” fără acces la cont AWS, fiind complet local și reproductibil.
 
 
-  Pentru rulare 
-
 ## Depanare si investigarea erorilor
 - [Descrieti cum putem accesa logurile aplicatiei si cum ne logam pe fiecare container pentru eventualele depanari de probleme]
 - [Descrieti cum ati gandit logurile (formatul logurilor, levelul de log)]
 
 
-## Resurse
-- [Listati aici orice link catre o resursa externa il considerti relevant]
-- Exemplu de URL:
+## 📚 Resurse
+Documentație și sintaxă
+
 - [Sintaxa Markdown](https://www.markdownguide.org/cheat-sheet/)
-- [Schelet Proiect](https://github.com/amihai/platforma-monitorizare)
+- [Git – Documentation](https://git-scm.com/doc)
+- [Docker – Get Started](https://docs.docker.com/get-started/)
+- [Docker Compose – Docs](https://docs.docker.com/compose/)
+- [Kubernetes – Documentation](https://kubernetes.io/docs/home/)
+- [Minikube – Documentation](https://minikube.sigs.k8s.io/docs/)
+- [Jenkins – Pipeline Syntax](https://www.jenkins.io/doc/book/pipeline/syntax/)
+- [Ansible – Documentation](https://docs.ansible.com/)
+- [Terraform – Documentation](https://developer.hashicorp.com/terraform/docs)
+- [LocalStack – Documentation](https://docs.localstack.cloud/)
+
+Proiecte / exemple
+
+- [Schelet Proiect – Platforma Monitorizare (exemplu curs)](https://github.com/amihai/platforma-monitorizare)
+- [Docker Hub – Imagini aplicație](https://hub.docker.com/) (căutând mateimonicamihaela/monitoring și mateimonicamihaela/backup)
