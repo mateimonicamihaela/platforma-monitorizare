@@ -425,6 +425,7 @@ kubectl -n monitoring get deploy,svc,hpa
 kubectl -n monitoring describe hpa platforma-monitorizare-hpa
 kubectl top pods -n monitoring   # necesită metrics-server
 ```
+HPA-ul platforma-monitorizare-hpa scalează deployment-ul platforma-monitorizare între 2 și 10 replici, în funcție de utilizarea de CPU și memorie. Metricele sunt colectate prin metrics-server. La pornire, HPA poate raporta erori temporare de tipul „unable to get metrics for resource cpu/memory” până când metrics-server devine complet operațional. După stabilizare, condițiile HPA (AbleToScale=True, ScalingActive=True, ScalingLimited=False) confirmă că autoscalarea funcționează corect.
 
 7. Acces la aplicație (Nginx care servește logurile)
 
@@ -436,6 +437,7 @@ minikube service -n monitoring platforma-monitorizare --url
 #   <URL>/logs/system-state.log 
 #   <URL>/logs/backup/   (listă de fișiere; autoindex activ din ConfigMap) 
 ```
+
 Varianta 2 - Port-forward (convenabil pentru demo)
 ```bash
 kubectl -n monitoring port-forward svc/platforma-monitorizare 8080:80
@@ -446,6 +448,14 @@ curl http://localhost:8080/logs/system-state.log
 # sau in browser:
 http://localhost:8080/logs/system-state.log
 ```
+
+Verificam ce proces folosește portul 8080:
+```bash
+sudo lsof -i:8080      # Vezi ce proces folosește portul 8080:
+sudo kill 1234         # Oprește procesul (în exemplu, PID = 1234):
+sudo kill -9 1234      # Dacă nu moare, dam comanda asta si pe urma reia port-forward-ul
+```
+
 
 
 8. Vezi logurile din containere
@@ -478,6 +488,8 @@ curl http://192.168.49.2:32055/logs/system-state.log
 curl http://192.168.49.2:32055/logs/backup/
 
 
+
+
 🧩 Structura actuală a Pod-ului (din k8s/deployment.yaml)
 
 În Pod avem 3 containere care rulează împreună și partajează un volum /data comun:
@@ -487,6 +499,7 @@ curl http://192.168.49.2:32055/logs/backup/
 | 🖥️  `monitoring` | rulează `monitoring.sh` – colectează starea sistemului și scrie în `/data/system-state.log` | ❌ nu expune porturi    | ✅ scrie în `/data/system-state.log` |
 | 🧱 `backup`      | rulează `backup.py` – monitorizează fișierul de log și face copii în `/data/backup/`        | ❌ nu expune porturi    | ✅ salvează în `/data/backup/`       |
 | 🌐 `nginx`       | servește prin HTTP conținutul din `/data/` (loguri + backup-uri)                            | ✅ expune portul **80** | ✅ montează `/data` read-only        |
+
 
 Alternativă completă — „hard reset” (dacă vrem să curețam tot )
 ```bash
@@ -614,7 +627,7 @@ ansible-galaxy collection install -r requirements.yml
 
 Test ping simplu
 ```bash
-ansible monitoring_vm -m ping
+sudo -u jenkins -H bash -lc 'ansible -i inventory.ini monitoring_vm -m ping'
 ```
 
 
@@ -625,7 +638,7 @@ ansible/playbooks/install_docker.yml
 Rulează:
 ```bash
 cd ansible
-ansible-playbook playbooks/install_docker.yml
+sudo -u jenkins -H bash -lc 'ansible-playbook playbooks/install_docker.yml'
 ```
 
 
@@ -645,7 +658,7 @@ Acest playbook:
 ansible/playbooks/deploy_platform.yml
 
 ```bash
-ansible-playbook playbooks/deploy_platform.yml
+sudo -u jenkins -H bash -lc 'ansible-playbook playbooks/deploy_platform.yml'
 ```
 
 Verificări manuale: 
@@ -662,7 +675,7 @@ sudo tail -n 20 /opt/platforma-monitorizare/data/system-state.log
 Pe masina locala
 
 ```bash
-ansible monitoring_vm -m command -a "docker ps"
+sudo -u jenkins -H bash -lc 'ansible monitoring_vm -m command -a "docker ps"'
 ```
 
 
@@ -863,7 +876,7 @@ Dacă există erori, buildul se oprește.
     - Rulează playbookul:
 
   ```bash
-  ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
+  sudo -u jenkins -H bash -lc 'ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml'
   ```
 
 Exemplu inventar:
@@ -932,7 +945,7 @@ Construiește și publică imaginea Docker pentru containerul backup (scriptul P
 5. **Deploy pe server (prin Ansible):**
     - Rulează același playbook Ansible ca și pipeline-ul de monitoring.
   ```bash
-  ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
+  sudo -u jenkins -H bash -lc 'ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml'
   ```
 
 Rezultat așteptat:
@@ -988,7 +1001,7 @@ Completează:
   - Password: (alege o parolă simplă)
   - Full name: „Monitorizare CI/CD”
   - Email: (opțional)
-  
+
 Apasă Create User
 
 4. **Configurează roluri:**
@@ -1063,7 +1076,7 @@ Apasă Save.
 
 1. Deconectează-te din Jenkins.
 
-2. Autentifică-te cu userul nou (monitor-ci).
+2. Autentifică-te cu userul nou (monitoring-ci).
 
 3. Verifică:
     - Poate vedea doar view-ul Platforma Monitorizare.
@@ -1394,6 +1407,114 @@ Acest setup permite testarea și validarea infrastructurii „platforma-monitori
 ## Depanare si investigarea erorilor
 - [Descrieti cum putem accesa logurile aplicatiei si cum ne logam pe fiecare container pentru eventualele depanari de probleme]
 - [Descrieti cum ati gandit logurile (formatul logurilor, levelul de log)]
+
+### Accesarea logurilor aplicației
+
+Aplicația scrie logurile principale pe sistemul de fișiere, nu doar în consolă.
+
+#### Pe mașina remote (VM / Docker host)
+
+- Fișierul principal de log: ~/work/platforma-monitorizare/data/system-state.log
+
+- Fișierele de backup: ~/work/platforma-monitorizare/data/backup/system-state-YYYYMMDD-HHMMSS.log
+
+
+Comenzi utile:
+```bash
+# Ultimele 20 de linii din logul curent
+tail -n 20 ~/work/platforma-monitorizare/data/system-state.log
+
+# Ultimul fișier de backup creat
+ls -1 ~/work/platforma-monitorizare/data/backup | sort | tail -n 1
+
+# Afișează conținutul ultimului backup
+LATEST_BACKUP=$(ls -1 ~/work/platforma-monitorizare/data/backup | sort | tail -n 1)
+cat "~/work/platforma-monitorizare/data/backup/$LATEST_BACKUP"
+```
+
+Accesarea containerelor și logurilor în Docker
+
+Containerele principale sunt:
+
+  - monitoring-service
+
+  - backup-service
+
+Loguri din containere
+```bash
+docker logs monitoring-service
+docker logs backup-service
+
+# Vizualizare live
+docker logs -f monitoring-service
+docker logs -f backup-service
+```
+
+Acces în containere
+
+```bash
+docker exec -it monitoring-service bash
+docker exec -it backup-service bash
+```
+
+### Accesarea containerelor și logurilor în Kubernetes / Minikube
+
+Namespace: monitoring
+```bash
+
+```
+Acces interactiv în containere:
+
+
+
+
+
+
+
+
+### Loguri Jenkins (pipeline-uri CI/CD)
+
+Pentru depanarea pipeline-urilor:
+
+1. Deschide jobul pipeline-monitoring sau pipeline-backup.
+
+2. Accesează secțiunea Console Output pentru a vedea logurile complete.
+
+3. În Blue Ocean, poți vizualiza logurile pe etape (checkout, build, push, deploy).
+
+Problemele cele mai frecvente:
+
+  - erori la docker build sau docker push
+
+  - erori în rularea ansible-playbook
+
+  - probleme SSH către mașina remote
+
+
+### Loguri Ansible
+
+Playbook-ul principal de deploy:
+
+```bash
+ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
+```
+
+Dacă rulezi manual:
+
+```bash
+cd ansible
+ansible-playbook -i inventory.ini playbooks/deploy_platform.yml -vv
+```
+Scenarii comune de depanare
+
+| Problemă                         | Cauză posibilă                       | Soluție                                                                         |
+| -------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------- |
+| Jenkins nu poate face deploy     | Cheia SSH lipsă / permisiuni greșite | Verifică `authorized_keys` și `ansible_ssh_private_key_file`                    |
+| Eroare la `docker push`          | Credențiale DockerHub invalide       | Actualizează credentialul `dockerhub-credentials` în Jenkins                    |
+| Ansible dă „UNREACHABLE”         | Firewall sau SSH oprit pe VM         | Verifică `systemctl status ssh` și `ufw status`                                 |
+| Backup-urile nu se mai generează | Scriptul `backup.py` s-a oprit       | Verifică containerul: `docker logs backup-service`                              |
+| Locale error (UTF-8)             | Lipsă setări locale                  | Adaugă în pipeline: `export LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONIOENCODING=UTF-8` |
+
 
 
 ## 📚 Resurse
