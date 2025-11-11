@@ -888,17 +888,17 @@ Verifică sintaxa scriptului Bash, construiește imaginea Docker, o publică în
    Obține codul din GitHub (branch `main`).
 
 2. **Verificare sintaxă Bash:**  
-   ```bash
-   bash -n scripts/monitoring.sh
-  ```
+```bash
+bash -n scripts/monitoring.sh
+```
 
 Dacă există erori, buildul se oprește.
 
 3. **Construire imagine Docker:**
 
-  ```bash
-   docker build -t mateimonicamihaela/monitoring:latest -f docker/monitoring/Dockerfile .
-   ```
+```bash
+docker build -t mateimonicamihaela/monitoring:latest -f docker/monitoring/Dockerfile .
+```
 
 4. **Publicare imagine Docker:**
  - Autentificare cu docker login
