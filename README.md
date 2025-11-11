@@ -1418,9 +1418,8 @@ Prin rularea acestui Terraform cu LocalStack Pro:
 Acest setup permite testarea și validarea infrastructurii „platforma-monitorizare” fără acces la cont AWS, fiind complet local și reproductibil.
 
 
+
 ## Depanare si investigarea erorilor
-- [Descrieti cum putem accesa logurile aplicatiei si cum ne logam pe fiecare container pentru eventualele depanari de probleme]
-- [Descrieti cum ati gandit logurile (formatul logurilor, levelul de log)]
 
 ### Accesarea logurilor aplicației
 
