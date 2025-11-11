@@ -1,5 +1,19 @@
 # 🛠️ Platforma de Monitorizare a Starii unui Sistem 🛠️
 
+## Clonare proiect
+
+Pentru a clona acest proiect creați propriul vostru repository EMPTY în GitHub și rulați pas cu pas comenzile de mai jos:
+
+```bash
+git clone git@github.com:mateimonicamihaela/platforma-monitorizare.git
+cd platforma-monitorizare
+git remote -v
+git remote remove origin
+git remote add origin git@github.com:<USERUL_VOSTRU>/platforma-monitorizare.git
+git branch -M main
+git push -u origin main
+```
+
 ## Scopul Proiectului
 
 Acest proiect reprezintă o platformă completă de monitorizare și automatizare DevOps, dezvoltată pentru a demonstra un flux de integrare continuă (CI/CD) și administrare a infrastructurii containerizate. Aplicația urmărește starea sistemului (sau a unui container), colectând periodic informații despre:
@@ -1458,19 +1472,38 @@ docker exec -it backup-service bash
 ```
 
 ### Accesarea containerelor și logurilor în Kubernetes / Minikube
+Aplicația rulează în Namespace-ul monitoring, iar podul principal (din deployment.yaml) conține 3 containere:
+monitoring, backup și nginx.
 
-Namespace: monitoring
+
 ```bash
+# Listează podurile active în namespace-ul monitoring
+kubectl -n monitoring get pods
 
+# Exemplu de rezultat:
+# NAME                                      READY   STATUS    RESTARTS   AGE
+# platforma-monitorizare-7f9d8bdb77-6pt9f   3/3     Running   0          10m
+
+# Loguri din containerul de monitorizare
+kubectl -n monitoring logs platforma-monitorizare-7f9d8bdb77-6pt9f -c monitoring
+
+# Loguri din containerul de backup
+kubectl -n monitoring logs platforma-monitorizare-7f9d8bdb77-6pt9f -c backup
+
+# Loguri din containerul nginx
+kubectl -n monitoring logs platforma-monitorizare-7f9d8bdb77-6pt9f -c nginx
+
+# Loguri live pentru backup
+kubectl -n monitoring logs -f platforma-monitorizare-7f9d8bdb77-6pt9f -c backup
 ```
+
 Acces interactiv în containere:
 
-
-
-
-
-
-
+```bash
+kubectl -n monitoring exec -it platforma-monitorizare-7f9d8bdb77-6pt9f -c monitoring -- bash
+kubectl -n monitoring exec -it platforma-monitorizare-7f9d8bdb77-6pt9f -c backup -- bash
+kubectl -n monitoring exec -it platforma-monitorizare-7f9d8bdb77-6pt9f -c nginx -- bash
+```
 
 ### Loguri Jenkins (pipeline-uri CI/CD)
 
