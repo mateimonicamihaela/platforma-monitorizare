@@ -290,7 +290,35 @@ docker run -d \
   mateimonicamihaela/backup:latest
 ```
 
-Afișare log execuție:
+🔍 Cum afli numele containerului exact
+
+Ruleaza:
+```bash
+docker ps
+```
+
+🧰 Testare manuală
+
+Putem verifica direct continutul din containere:
+
+```bash
+docker exec -it monitoring-container cat /data/system-state.log
+docker exec -it backup-container ls /data/backup
+```
+
+🔧 Acces interactiv în containere
+```bash
+docker exec -it monitoring-container bash     # Containerul de monitorizare (Bash script)
+docker exec -it backup-container bash         # Containerul de backup (Python script)
+```
+
+🔍 Vizualizare loguri
+```bash
+docker logs monitoring-container    # Logurile din containerul de monitorizare
+docker logs backup-container        # Logurile din containerul de backup
+```
+
+Afișare log execuție live (actualizare in timp real):
 ```bash
 docker logs -f monitoring-container
 docker logs -f backup-container
@@ -353,14 +381,6 @@ Containerele nu comunică prin rețea, ci prin volumul local montat:
 
 Astfel, backup-service vede fișierul actualizat de monitoring-service și creează copii noi doar dacă fișierul s-a modificat.
 
-🧰 Testare manuală
-
-Putem verifica direct continutul din containere:
-
-```bash
-docker exec -it monitoring-service cat /data/system-state.log
-docker exec -it backup-service ls /data/backup
-```
 ☁️ (Opțional) Publicarea imaginilor în Docker Hub
 
 După ce verificam că totul funcționează, rulam:

@@ -100,14 +100,3 @@ while true; do
   log "Starea sistemului a fost scrisă în $OUT_FILE (suprascris)."
   sleep "$INTERVAL" # Pauză de INTERVAL secunde înainte de următoarea colectare
 done
-
-
-# Rulare
-# chmod +x monitoring.sh  
-# ./monitoring.sh
-
-
-# Verificare rapida
-# Intr-un alt terminal:
-# watch -n 1 'head -n 30 "/media/eu/More data/platforma-monitorizare/scripts/system-state.log"'
-# „Afișează primele 30 de linii din fișierul system-state.log la fiecare 1 secundă, actualizând ecranul automat.”
