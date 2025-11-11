@@ -773,8 +773,7 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 Pluginuri necesare
 
 În Jenkins → Manage Jenkins → Plugins:
-  - Available (căutare și instalare):
-
+Available (căutare și instalare):
     - Git (git, git client)
     - Pipeline (workflow-aggregator)
     - Docker Pipeline și Docker (docker, docker commons)
@@ -916,7 +915,7 @@ Dacă există erori, buildul se oprește.
     - Rulează playbookul:
 
   ```bash
-  sudo -u jenkins -H bash -lc 'ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml'
+  ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
   ```
 
 Exemplu inventar:
@@ -985,7 +984,7 @@ Construiește și publică imaginea Docker pentru containerul backup (scriptul P
 5. **Deploy pe server (prin Ansible):**
     - Rulează același playbook Ansible ca și pipeline-ul de monitoring.
   ```bash
-  sudo -u jenkins -H bash -lc 'ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml'
+  ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_platform.yml
   ```
 
 Rezultat așteptat:
