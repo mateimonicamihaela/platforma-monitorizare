@@ -960,26 +960,26 @@ Construiește și publică imaginea Docker pentru containerul backup (scriptul P
    Obține codul din GitHub (branch `main`).
 
 2. **Verificare Python (opțional):**
-   ```bash
-    python3 -m pip install --user ruff pytest
-    ~/.local/bin/ruff scripts/backup.py
-    pytest
-   ```
+```bash
+python3 -m pip install --user ruff pytest
+~/.local/bin/ruff scripts/backup.py
+pytest
+```
 
 3. **Construire imagine Docker:**
-  ```bash
-   docker build -t mateimonicamihaela/backup:latest -f docker/backup/Dockerfile .
-   ```
+```bash
+docker build -t mateimonicamihaela/backup:latest -f docker/backup/Dockerfile .
+```
    
 4. **Publicare imagine Docker:**
 
-   - Autentificare cu docker login
-   - Publicare imagine:
+  - Autentificare cu docker login
+  - Publicare imagine:
 
-  ```bash
-  docker push mateimonicamihaela/backup:latest
-  ```
-    - Logout după încărcare
+```bash
+docker push mateimonicamihaela/backup:latest
+```
+  - Logout după încărcare
 
 5. **Deploy pe server (prin Ansible):**
     - Rulează același playbook Ansible ca și pipeline-ul de monitoring.
