@@ -663,6 +663,12 @@ Test ping simplu
 ```bash
 sudo -u jenkins -H bash -lc 'ansible -i inventory.ini monitoring_vm -m ping'
 ```
+Explicație:
+  - sudo -u jenkins -H → rulează comanda ca user jenkins.
+  - bash -lc '...' → îi dă un shell de login, ca să aibă PATH-ul și mediul lui.
+  - ansible -i inventory.ini monitoring_vm -m ping → exact comanda ta, dar “din perspectiva” lui jenkins, care:
+    - are cheia în /var/lib/jenkins/.ssh/id_rsa,
+    - are deja acces SSH la monitor@192.168.100.240.
 
 
 3. Playbook 1 — Instalează Docker (Docker CE + compose plugin)
