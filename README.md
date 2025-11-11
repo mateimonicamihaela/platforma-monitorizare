@@ -98,16 +98,16 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 │   └── requirements.yml
 ├── data
 │   ├── backup
-│   │   ├── system-state-20251107-161149.log
-│   │   ├── system-state-20251107-161154.log
-│   │   ├── system-state-20251107-161159.log
-│   │   ├── system-state-20251107-161204.log
-│   │   ├── system-state-20251107-161209.log
-│   │   ├── system-state-20251107-161215.log
-│   │   ├── system-state-20251107-161221.log
-│   │   ├── system-state-20251107-161227.log
-│   │   ├── system-state-20251107-161232.log
-│   │   └── system-state-20251107-161237.log
+│   │   ├── system-state-20251111-101649.log
+│   │   ├── system-state-20251111-101654.log
+│   │   ├── system-state-20251111-101659.log
+│   │   ├── system-state-20251111-101704.log
+│   │   ├── system-state-20251111-101709.log
+│   │   ├── system-state-20251111-101714.log
+│   │   ├── system-state-20251111-101719.log
+│   │   ├── system-state-20251111-101724.log
+│   │   ├── system-state-20251111-101729.log
+│   │   └── system-state-20251111-101734.log
 │   └── system-state.log
 ├── docker
 │   ├── backup
@@ -116,7 +116,12 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 │   └── monitoring
 │       └── Dockerfile
 ├── imagini
-│   └── jenkins-logo.png
+│   ├── jenkins-logo.png
+│   ├── pipeline-backup-blueocean.png
+│   ├── pipeline-backup-stage.png
+│   ├── pipeline-monitoring-blueocean.png
+│   ├── pipeline-monitoring-stage.png
+│   └── Platforma Monitorizare View.png
 ├── jenkins
 │   └── pipelines
 │       ├── backup
@@ -140,6 +145,7 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
     ├── providers.tf
     ├── variables.tf
     └── versions.tf
+
 ```
 
 ## Structura Proiectului
@@ -162,6 +168,7 @@ Un al doilea serviciu, de backup automat, monitorizează modificările fișierul
 - `/ansible`:
     - `install_docker.yml`: configurarea principală a Ansible (căi, timeout, inventory implicit).
     - `deploy_platform.yml`: definește mașinile-țintă (de exemplu VM-ul vm1 de pe IP 192.168.100.240) și utilizatorii (monitor, jenkins).
+    - `ansible.cfg`: este configurația centrală a Ansible-ului pentru proiect si are rolul sa controleze comportamentul Ansible atunci când rulezi playbook-urile install_docker.yml și deploy_platform.yml
     - `inventory.ini`: definește VM-urile țintă
     - `requirements.yml`: listează colecțiile Ansible necesare (ex: community.docker pentru gestiunea containerelor).
     - `playbooks/install_docker.yml`: playbook care instalează Docker Engine și dependințele pe mașina remote, pregătind mediul de execuție.
